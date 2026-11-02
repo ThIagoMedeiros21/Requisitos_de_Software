@@ -1,0 +1,12 @@
+import "../compartilhado/projeto.cml"
+
+ContextMap {
+	contains loja, compartilhado
+
+	loja Downstream-Upstream compartilhado
+}
+
+BoundedContext loja implements loja {
+	Module loja {
+	}
+}

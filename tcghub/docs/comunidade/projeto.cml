@@ -1,0 +1,12 @@
+import "../compartilhado/projeto.cml"
+
+ContextMap {
+	contains comunidade, compartilhado
+
+	comunidade Downstream-Upstream compartilhado
+}
+
+BoundedContext comunidade implements comunidade {
+	Module comunidade {
+	}
+}

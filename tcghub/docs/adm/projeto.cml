@@ -1,0 +1,12 @@
+import "../compartilhado/projeto.cml"
+
+ContextMap {
+	contains adm, compartilhado
+
+	adm Downstream-Upstream compartilhado
+}
+
+BoundedContext adm implements adm {
+	Module adm {
+	}
+}

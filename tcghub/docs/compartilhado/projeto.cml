@@ -1,0 +1,28 @@
+Domain dominio {
+	domainVisionStatement = "Projeto focado em cardgame"
+
+	Subdomain adm {
+		type = CORE_DOMAIN
+		domainVisionStatement = "Administrador"
+	}
+
+	Subdomain comunidade {
+		type = SUPPORTING_DOMAIN
+		domainVisionStatement = "Comunidade"
+	}
+
+	Subdomain loja {
+		type = CORE_DOMAIN
+		domainVisionStatement = "Usuario"
+	}
+}
+
+BoundedContext compartilhado {
+	Module compartilhado {
+		Aggregate compartilhado {
+			enum Autorizacao {
+				ADMINISTRADOR, USUARIO
+			}
+		}
+	}
+}

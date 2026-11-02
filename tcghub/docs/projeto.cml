@@ -1,0 +1,4 @@
+import "compartilhado/projeto.cml"
+import "adm/projeto.cml"
+import "comunidade/projeto.cml"
+import "loja/projeto.cml"
