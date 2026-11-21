@@ -57,6 +57,20 @@ export const rotas = [
             },
           },
           {
+            path: 'comunidade/decks-favoritos',
+            lazy: async () => {
+              const [{ FavoriteDecksPage }, { carregarDecksFavoritos }] = await Promise.all([
+                import('../features/community/decks/pages/FavoriteDecksPage'),
+                import('../features/community/decks/api/decksQueries'),
+              ]);
+              return { Component: FavoriteDecksPage, loader: carregarDecksFavoritos };
+            },
+          },
+          {
+            path: 'comunidade/decks',
+            element: <Navigate to="/comunidade/decks-favoritos" replace />,
+          },
+          {
             path: 'comunidade/amigos',
             lazy: async () => {
               const [{ FriendsNetworkPage }, { carregarRedeAmizades }] = await Promise.all([
@@ -94,6 +108,10 @@ export const rotas = [
               ]);
               return { Component: ProfilePage, loader: carregarPerfilPorId };
             },
+          },
+          {
+            path: 'comunidade/deck-favorito/pesquisa',
+            element: <Navigate to="/comunidade/decks-favoritos" replace />,
           },
           {
             path: 'comunidade/amizade/pesquisa',

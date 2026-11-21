@@ -2,10 +2,10 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { CommunitySubNav } from '../../../../components/layout/CommunitySubNav';
+import { FavoriteDecksProfileCard } from '../../decks/components/FavoriteDecksProfileCard';
 import { consultaPerfilVisao } from '../api/profileQueries';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { FavoriteCardsSection } from '../components/FavoriteCardsSection';
-import { ProfileDecksPreview } from '../components/ProfileDecksPreview';
 import { ProfileHeaderCard } from '../components/ProfileHeaderCard';
 import { ProfileWishlistPreview } from '../components/ProfileWishlistPreview';
 import { SelectFavoriteCardModal } from '../components/SelectFavoriteCardModal';
@@ -50,7 +50,7 @@ export function ProfilePage() {
         <FavoriteCardsSection perfil={perfil} />
 
         <div className="grid grid-cols-1 gap-space-md md:grid-cols-2">
-          <ProfileDecksPreview perfil={perfil} />
+          <FavoriteDecksProfileCard perfil={perfil} />
           <ProfileWishlistPreview perfil={perfil} />
         </div>
       </div>

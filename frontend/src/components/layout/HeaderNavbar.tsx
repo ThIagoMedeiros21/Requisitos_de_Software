@@ -57,13 +57,12 @@ export function HeaderNavbar() {
                 >
                   Catálogo
                 </button>
-                <button
-                  type="button"
-                  onClick={() => publicar('info', 'Decks disponíveis na próxima etapa.')}
-                  className="rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface"
+                <Link
+                  to="/comunidade/decks-favoritos"
+                  className="rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface-variant no-underline transition-colors hover:bg-surface-container-low hover:text-on-surface"
                 >
                   Decks
-                </button>
+                </Link>
                 <Link
                   to="/comunidade/perfil"
                   aria-current="page"
@@ -206,6 +205,14 @@ export function HeaderNavbar() {
               >
                 <Icon nome="badge" className="text-[18px]" />
                 Meu Perfil
+              </Link>
+              <Link
+                to="/comunidade/decks-favoritos"
+                onClick={() => definirGavetaAberta(false)}
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 font-label-md text-label-md font-semibold text-deep-navy no-underline hover:bg-surface-container-low"
+              >
+                <Icon nome="view_carousel" className="text-[18px]" />
+                Decks Favoritos
               </Link>
               <Link
                 to="/comunidade/amigos"

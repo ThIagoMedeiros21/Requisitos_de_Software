@@ -1,6 +1,10 @@
 import { create } from 'zustand';
 
-export type AbaComunidade = 'meu-perfil' | 'rede-amigos' | 'buscar-colecionadores';
+export type AbaComunidade =
+  | 'meu-perfil'
+  | 'decks-favoritos'
+  | 'rede-amigos'
+  | 'buscar-colecionadores';
 export type SubAbaAmizade = 'meus-amigos' | 'recebidas' | 'enviadas';
 
 export interface AlvoRemocaoAmizade {

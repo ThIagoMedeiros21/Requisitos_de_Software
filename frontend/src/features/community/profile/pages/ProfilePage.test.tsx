@@ -236,7 +236,7 @@ describe('ProfilePage e EditProfileModal (F001 — P01 a P05)', () => {
 
     expect(await screen.findByRole('heading', { name: 'ZoroTC' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Editar Perfil/i })).not.toBeInTheDocument();
-    expect(screen.queryByText('Decks Favoritos')).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Decks Favoritos' })).not.toBeInTheDocument();
     expect(
       screen.getByText('Este colecionador ainda não destacou cartas favoritas'),
     ).toBeInTheDocument();

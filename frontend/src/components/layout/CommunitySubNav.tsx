@@ -42,6 +42,15 @@ export function CommunitySubNav({
           <span>Meu Perfil</span>
         </Link>
 
+        <Link
+          to="/comunidade/decks-favoritos"
+          onClick={() => definirAbaAtiva('decks-favoritos')}
+          className={classeAba(abaAtiva === 'decks-favoritos')}
+        >
+          <Icon nome="view_carousel" className="text-[18px]" />
+          <span>Decks Favoritos</span>
+        </Link>
+
         <button
           type="button"
           onClick={() => publicar('info', 'Navegando para Minha Coleção...')}
