@@ -1,1 +1,9 @@
 // Complementa os modelos docs/S/projeto.dbml de cada subdomínio S.
+// Relacionamento inter-subdomínio unidirecional (comunidade -> adm, sem ciclos):
+// Ref: APR_ABERTURA_PREFERIDA.ABR_ID > ABR_ABERTURA.ABR_ID
+//
+// Tabelas por subdomínio:
+// - docs/adm/projeto.dbml: ABR_ABERTURA
+// - docs/comunidade/projeto.dbml: PCM_PERFIL_COMUNITARIO, PCF_PERFIL_CARTA_FAVORITA,
+//   AMI_AMIZADE, DFA_DECK_FAVORITO, CVE_COMPRA_VERIFICADA, AVA_AVALIACAO_PRODUTO, APR_ABERTURA_PREFERIDA
+// - docs/loja/projeto.dbml: escopo de equipe paralela (sem acoplamento direto de banco com comunidade).

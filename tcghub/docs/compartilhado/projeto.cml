@@ -1,5 +1,5 @@
 Domain dominio {
-	domainVisionStatement = "Projeto focado em cardgame"
+	domainVisionStatement = "Plataforma web para comunidade, catalogo e comercio de cardgames (TCGHub)"
 
 	Subdomain adm {
 		type = CORE_DOMAIN
@@ -22,6 +22,10 @@ BoundedContext compartilhado {
 		Aggregate compartilhado {
 			enum Autorizacao {
 				ADMINISTRADOR, USUARIO
+			}
+
+			ValueObject UsuarioIdentificador {
+				String valor
 			}
 		}
 	}

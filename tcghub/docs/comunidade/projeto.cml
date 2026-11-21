@@ -1,12 +1,307 @@
 import "../compartilhado/projeto.cml"
+import "../adm/projeto.cml"
 
 ContextMap {
-	contains comunidade, compartilhado
+	contains comunidade, adm, compartilhado
 
 	comunidade Downstream-Upstream compartilhado
+	comunidade Downstream-Upstream adm
 }
 
 BoundedContext comunidade implements comunidade {
 	Module comunidade {
+		Aggregate PerfilComunitario {
+			Entity PerfilComunitario {
+				aggregateRoot
+
+				-PerfilComunitarioIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-Apelido apelido
+				String cidade nullable
+				String descricao nullable
+				String foto nullable
+				String preferenciasPublicas nullable
+				boolean decksFavoritosVisiveis
+				-List<CartaIdentificador> cartasFavoritas
+
+				Repository PerfilComunitarioRepository {
+					@PerfilComunitario incluir(@PerfilComunitario agregado);
+					boolean existePorIdentificador(@PerfilComunitarioIdentificador identificador);
+					@PerfilComunitario buscarPorIdentificador(@PerfilComunitarioIdentificador identificador);
+					void alterar(@PerfilComunitario agregado);
+					void excluir(@PerfilComunitarioIdentificador identificador);
+					boolean existePorUsuario(@UsuarioIdentificador usuario);
+					@PerfilComunitario buscarPorUsuario(@UsuarioIdentificador usuario);
+					boolean existePorApelido(@Apelido apelido, @PerfilComunitarioIdentificador identificadorIgnorado);
+				}
+			}
+
+			ValueObject PerfilComunitarioIdentificador {
+				String valor
+			}
+
+			ValueObject Apelido {
+				String valor
+			}
+
+			ValueObject CartaIdentificador {
+				String valor
+			}
+
+			Service PerfilComunitarioServico {
+				@PerfilComunitario incluir(@PerfilComunitario agregado);
+				@PerfilComunitario buscar(@PerfilComunitarioIdentificador identificador);
+				void alterar(@PerfilComunitario agregado);
+				void fixarCartaFavorita(@UsuarioIdentificador usuario, @CartaIdentificador carta);
+				void removerCartaFavorita(@UsuarioIdentificador usuario, @CartaIdentificador carta);
+				void alterarVisibilidadeDecksFavoritos(@UsuarioIdentificador usuario, boolean visivel);
+			}
+
+			// Padrao GoF Proxy (exclusivo de Lucas): protecao e controle de visibilidade publica vs. proprietario
+			Service PerfilComunitarioVisibilidadeProxy {
+				@PerfilComunitario consultarPerfil(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo);
+				void editarPerfil(@UsuarioIdentificador solicitante, @PerfilComunitario agregado);
+				void fixarCartaFavorita(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo, @CartaIdentificador carta);
+				void removerCartaFavorita(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo, @CartaIdentificador carta);
+			}
+		}
+
+		Aggregate Amizade {
+			Entity Amizade {
+				aggregateRoot
+
+				-AmizadeIdentificador identificador key
+				-UsuarioIdentificador solicitante
+				-UsuarioIdentificador destinatario
+				-StatusAmizade status
+				DateTime criadoEm
+				DateTime atualizadoEm nullable
+
+				Repository AmizadeRepository {
+					@Amizade incluir(@Amizade agregado);
+					boolean existePorIdentificador(@AmizadeIdentificador identificador);
+					@Amizade buscarPorIdentificador(@AmizadeIdentificador identificador);
+					void alterar(@Amizade agregado);
+					void excluir(@AmizadeIdentificador identificador);
+					boolean existeRelacaoEntre(@UsuarioIdentificador usuarioA, @UsuarioIdentificador usuarioB);
+					@Amizade buscarRelacaoEntre(@UsuarioIdentificador usuarioA, @UsuarioIdentificador usuarioB);
+					List<@Amizade> listarAmizadesAtivas(@UsuarioIdentificador usuario);
+				}
+			}
+
+			ValueObject AmizadeIdentificador {
+				String valor
+			}
+
+			enum StatusAmizade {
+				PENDENTE, ACEITA
+			}
+
+			Service AmizadeServico {
+				@Amizade enviarSolicitacao(@UsuarioIdentificador solicitante, @UsuarioIdentificador destinatario);
+				void aceitarSolicitacao(@UsuarioIdentificador destinatario, @AmizadeIdentificador identificador);
+				void recusarSolicitacao(@UsuarioIdentificador destinatario, @AmizadeIdentificador identificador);
+				void cancelarSolicitacao(@UsuarioIdentificador solicitante, @AmizadeIdentificador identificador);
+				void removerAmizadeBilateral(@UsuarioIdentificador solicitante, @UsuarioIdentificador amigo);
+			}
+		}
+
+		Aggregate DeckFavorito {
+			Entity DeckFavorito {
+				aggregateRoot
+
+				-DeckFavoritoIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-DeckIdentificador deck
+				int ordem
+				DateTime adicionadoEm
+
+				Repository DeckFavoritoRepository {
+					@DeckFavorito incluir(@DeckFavorito agregado);
+					boolean existePorIdentificador(@DeckFavoritoIdentificador identificador);
+					@DeckFavorito buscarPorIdentificador(@DeckFavoritoIdentificador identificador);
+					void alterar(@DeckFavorito agregado);
+					void excluir(@DeckFavoritoIdentificador identificador);
+					int contarPorUsuario(@UsuarioIdentificador usuario);
+					boolean existePorUsuarioEDeck(@UsuarioIdentificador usuario, @DeckIdentificador deck);
+					@DeckFavorito buscarPorUsuarioEDeck(@UsuarioIdentificador usuario, @DeckIdentificador deck);
+					List<@DeckFavorito> listarPorUsuario(@UsuarioIdentificador usuario);
+				}
+			}
+
+			ValueObject DeckFavoritoIdentificador {
+				String valor
+			}
+
+			ValueObject DeckIdentificador {
+				String valor
+			}
+
+			ValueObject ItemComposicaoDeck {
+				-CartaIdentificador carta
+				String nomeCarta
+				int quantidade
+				double precoUnitario
+			}
+
+			ValueObject ComposicaoDeck {
+				-DeckIdentificador deck
+				String nomeDeck
+				String lider
+				boolean ativo
+				-List<ItemComposicaoDeck> itens
+			}
+
+			Service DeckFavoritoServico {
+				@DeckFavorito adicionar(@UsuarioIdentificador usuario, @DeckIdentificador deck);
+				void remover(@UsuarioIdentificador usuario, @DeckIdentificador deck);
+				List<@DeckFavorito> listarVisiveisNoPerfil(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo);
+			}
+
+			// Padrao GoF Proxy (exclusivo de Lucas): integracao ACL com Catalogo sem acoplamento ao banco de loja
+			Service CatalogoDeckProxy {
+				List<@ComposicaoDeck> pesquisarDecksAtivos(String termo);
+				boolean verificarDeckAtivo(@DeckIdentificador deck);
+				@ComposicaoDeck obterComposicaoDeck(@DeckIdentificador deck);
+			}
+		}
+
+		Aggregate CompraVerificada {
+			Entity CompraVerificada {
+				aggregateRoot
+
+				-CompraVerificadaIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-ProdutoIdentificador produto
+				-PedidoIdentificador pedido
+				boolean paga
+				boolean reembolsada
+				DateTime atualizadoEm
+
+				Repository CompraVerificadaRepository {
+					@CompraVerificada incluir(@CompraVerificada agregado);
+					boolean existePorIdentificador(@CompraVerificadaIdentificador identificador);
+					@CompraVerificada buscarPorIdentificador(@CompraVerificadaIdentificador identificador);
+					void alterar(@CompraVerificada agregado);
+					void excluir(@CompraVerificadaIdentificador identificador);
+					boolean existeCompraElegivel(@UsuarioIdentificador usuario, @ProdutoIdentificador produto);
+					@CompraVerificada buscarPorUsuarioEPedidoEProduto(@UsuarioIdentificador usuario, @PedidoIdentificador pedido, @ProdutoIdentificador produto);
+				}
+			}
+
+			ValueObject CompraVerificadaIdentificador {
+				String valor
+			}
+
+			ValueObject ProdutoIdentificador {
+				String valor
+			}
+
+			ValueObject PedidoIdentificador {
+				String valor
+			}
+
+			Service CompraVerificadaServico {
+				void registrarCompraPaga(@UsuarioIdentificador usuario, @PedidoIdentificador pedido, @ProdutoIdentificador produto);
+				void registrarReembolso(@UsuarioIdentificador usuario, @PedidoIdentificador pedido, @ProdutoIdentificador produto);
+			}
+		}
+
+		Aggregate AvaliacaoProduto {
+			Entity AvaliacaoProduto {
+				aggregateRoot
+
+				-AvaliacaoProdutoIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-ProdutoIdentificador produto
+				-NotaAvaliacao nota
+				String comentario nullable
+				boolean compraVerificada
+				boolean valida
+				DateTime avaliadoEm
+
+				Repository AvaliacaoProdutoRepository {
+					@AvaliacaoProduto incluir(@AvaliacaoProduto agregado);
+					boolean existePorIdentificador(@AvaliacaoProdutoIdentificador identificador);
+					@AvaliacaoProduto buscarPorIdentificador(@AvaliacaoProdutoIdentificador identificador);
+					void alterar(@AvaliacaoProduto agregado);
+					void excluir(@AvaliacaoProdutoIdentificador identificador);
+					boolean existePorUsuarioEProduto(@UsuarioIdentificador usuario, @ProdutoIdentificador produto);
+					@AvaliacaoProduto buscarPorUsuarioEProduto(@UsuarioIdentificador usuario, @ProdutoIdentificador produto);
+					List<@AvaliacaoProduto> listarValidasPorProduto(@ProdutoIdentificador produto);
+				}
+			}
+
+			ValueObject AvaliacaoProdutoIdentificador {
+				String valor
+			}
+
+			ValueObject NotaAvaliacao {
+				int valor
+			}
+
+			ValueObject ResumoAvaliacoesProduto {
+				-ProdutoIdentificador produto
+				double media
+				int quantidadeValida
+			}
+
+			Service AvaliacaoProdutoServico {
+				@AvaliacaoProduto avaliar(@UsuarioIdentificador usuario, @ProdutoIdentificador produto, @NotaAvaliacao nota, String comentario);
+				void invalidarPorReembolso(@UsuarioIdentificador usuario, @PedidoIdentificador pedido, @ProdutoIdentificador produto);
+				@ResumoAvaliacoesProduto consultarResumo(@ProdutoIdentificador produto);
+			}
+
+			// Padrao GoF Proxy (exclusivo de Lucas): controle de elegibilidade via CompraVerificada e autorizacao
+			Service AvaliacaoElegibilidadeProxy {
+				@AvaliacaoProduto registrarOuAtualizarAvaliacao(@UsuarioIdentificador solicitante, @UsuarioIdentificador autor, @ProdutoIdentificador produto, @NotaAvaliacao nota, String comentario);
+			}
+		}
+
+		Aggregate AberturaPreferida {
+			Entity AberturaPreferida {
+				aggregateRoot
+
+				-AberturaPreferidaIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-AberturaIdentificador abertura
+				boolean visivelNoPerfil
+				DateTime escolhidaEm
+
+				Repository AberturaPreferidaRepository {
+					@AberturaPreferida incluir(@AberturaPreferida agregado);
+					boolean existePorIdentificador(@AberturaPreferidaIdentificador identificador);
+					@AberturaPreferida buscarPorIdentificador(@AberturaPreferidaIdentificador identificador);
+					void alterar(@AberturaPreferida agregado);
+					void excluir(@AberturaPreferidaIdentificador identificador);
+					boolean existePorUsuario(@UsuarioIdentificador usuario);
+					@AberturaPreferida buscarPorUsuario(@UsuarioIdentificador usuario);
+					List<@AberturaPreferida> listarTodas();
+				}
+			}
+
+			ValueObject AberturaPreferidaIdentificador {
+				String valor
+			}
+
+			ValueObject ItemRankingAbertura {
+				-AberturaIdentificador abertura
+				int quantidadeEscolhas
+				double percentual
+			}
+
+			Service AberturaPreferidaServico {
+				@AberturaPreferida escolher(@UsuarioIdentificador usuario, @AberturaIdentificador abertura);
+				void alterarVisibilidade(@UsuarioIdentificador usuario, boolean visivelNoPerfil);
+				List<@ItemRankingAbertura> consultarRankingTop5();
+			}
+
+			// Padrao GoF Proxy (exclusivo de Lucas): privacidade no perfil/amigos e filtro de aberturas ativas de adm
+			Service AberturaPreferidaPrivacidadeProxy {
+				@AberturaPreferida consultarAberturaNoPerfil(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo);
+				boolean amigosPossuemMesmaPreferencia(@UsuarioIdentificador solicitante, @UsuarioIdentificador amigo);
+				int contarAmigosComAbertura(@UsuarioIdentificador usuario, @AberturaIdentificador abertura);
+			}
+		}
 	}
 }

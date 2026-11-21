@@ -1,0 +1,88 @@
+// Modelo de banco de dados relacional do subdomínio comunidade (DBML 10.1.1)
+// Nota: Referências externas a Usuario, Carta, Deck, Produto e Pedido permanecem desacopladas por identificadores lógicos e SPI/Proxy.
+// A FK ABR_ID referencia ABR_ABERTURA.ABR_ID do subdomínio adm (comunidade Downstream-Upstream adm, sem ciclos).
+
+Table PCM_PERFIL_COMUNITARIO {
+  PCM_ID bigint [pk, increment]
+  PCM_USR_ID varchar(100) [not null, unique]
+  PCM_APELIDO varchar(50) [not null, unique]
+  PCM_CIDADE varchar(100)
+  PCM_DESCRICAO varchar(500)
+  PCM_FOTO varchar(255)
+  PCM_PREFERENCIAS_PUBLICAS varchar(255)
+  PCM_DECKS_FAVORITOS_VISIVEIS boolean [not null]
+}
+
+Table PCF_PERFIL_CARTA_FAVORITA {
+  PCF_ID bigint [pk, increment]
+  PCM_ID bigint [not null, ref: > PCM_PERFIL_COMUNITARIO.PCM_ID]
+  PCF_INDICE int [not null]
+  PCF_CARTA_ID varchar(100) [not null]
+
+  indexes {
+    (PCM_ID, PCF_INDICE) [unique]
+    (PCM_ID, PCF_CARTA_ID) [unique]
+  }
+}
+
+Table AMI_AMIZADE {
+  AMI_ID bigint [pk, increment]
+  AMI_SOLICITANTE_ID varchar(100) [not null]
+  AMI_DESTINATARIO_ID varchar(100) [not null]
+  AMI_STATUS varchar(20) [not null]
+  AMI_CRIADO_EM timestamp [not null]
+  AMI_ATUALIZADO_EM timestamp
+
+  indexes {
+    (AMI_SOLICITANTE_ID, AMI_DESTINATARIO_ID) [unique]
+  }
+}
+
+Table DFA_DECK_FAVORITO {
+  DFA_ID bigint [pk, increment]
+  DFA_USR_ID varchar(100) [not null]
+  DFA_DECK_ID varchar(100) [not null]
+  DFA_ORDEM int [not null]
+  DFA_ADICIONADO_EM timestamp [not null]
+
+  indexes {
+    (DFA_USR_ID, DFA_DECK_ID) [unique]
+  }
+}
+
+Table CVE_COMPRA_VERIFICADA {
+  CVE_ID bigint [pk, increment]
+  CVE_USR_ID varchar(100) [not null]
+  CVE_PRODUTO_ID varchar(100) [not null]
+  CVE_PEDIDO_ID varchar(100) [not null]
+  CVE_PAGA boolean [not null]
+  CVE_REEMBOLSADA boolean [not null]
+  CVE_ATUALIZADO_EM timestamp [not null]
+
+  indexes {
+    (CVE_USR_ID, CVE_PEDIDO_ID, CVE_PRODUTO_ID) [unique]
+  }
+}
+
+Table AVA_AVALIACAO_PRODUTO {
+  AVA_ID bigint [pk, increment]
+  AVA_USR_ID varchar(100) [not null]
+  AVA_PRODUTO_ID varchar(100) [not null]
+  AVA_NOTA int [not null]
+  AVA_COMENTARIO varchar(1000)
+  AVA_COMPRA_VERIFICADA boolean [not null]
+  AVA_VALIDA boolean [not null]
+  AVA_AVALIADO_EM timestamp [not null]
+
+  indexes {
+    (AVA_USR_ID, AVA_PRODUTO_ID) [unique]
+  }
+}
+
+Table APR_ABERTURA_PREFERIDA {
+  APR_ID bigint [pk, increment]
+  APR_USR_ID varchar(100) [not null, unique]
+  ABR_ID bigint [not null]
+  APR_VISIVEL_NO_PERFIL boolean [not null]
+  APR_ESCOLHIDA_EM timestamp [not null]
+}

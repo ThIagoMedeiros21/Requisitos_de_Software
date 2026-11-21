@@ -1,0 +1,12 @@
+// Modelo de banco de dados relacional do subdomínio adm (DBML 10.1.1)
+
+Table ABR_ABERTURA {
+  ABR_ID bigint [pk, increment]
+  ABR_NR int [not null, unique]
+  ABR_NM varchar(150) [not null]
+  ABR_ARTISTA varchar(120) [not null]
+  ABR_EPISODIOS varchar(120) [not null]
+  ABR_IMAGEM varchar(255) [not null]
+  ABR_VIDEO varchar(255) [not null]
+  ABR_ATIVA boolean [not null]
+}

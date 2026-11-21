@@ -8,5 +8,42 @@ ContextMap {
 
 BoundedContext adm implements adm {
 	Module adm {
+		Aggregate Abertura {
+			Entity Abertura {
+				aggregateRoot
+
+				-AberturaIdentificador identificador key
+				int numero
+				String nome
+				String artista
+				String episodios
+				String imagem
+				String video
+				boolean ativa
+
+				Repository AberturaRepository {
+					@Abertura incluir(@Abertura agregado);
+					boolean existePorIdentificador(@AberturaIdentificador identificador);
+					@Abertura buscarPorIdentificador(@AberturaIdentificador identificador);
+					void alterar(@Abertura agregado);
+					void excluir(@AberturaIdentificador identificador);
+					boolean existePorNumero(int numero, @AberturaIdentificador identificadorIgnorado);
+					boolean possuiEscolhaPorUsuario(@AberturaIdentificador identificador);
+				}
+			}
+
+			ValueObject AberturaIdentificador {
+				String valor
+			}
+
+			Service AberturaServico {
+				@Abertura incluir(@Abertura agregado);
+				@Abertura buscar(@AberturaIdentificador identificador);
+				void alterar(@Abertura agregado);
+				void excluir(@AberturaIdentificador identificador);
+				void inativar(@AberturaIdentificador identificador);
+				void reativar(@AberturaIdentificador identificador);
+			}
+		}
 	}
 }
