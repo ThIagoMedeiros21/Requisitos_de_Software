@@ -46,6 +46,76 @@ class ComunidadeControladoresTest {
 				.andExpect(jsonPath("$.perfilComunitario.alterar").value(true))
 				.andExpect(jsonPath("$.amizade.incluir").value(true))
 				.andExpect(jsonPath("$.amizade.remover").value(true));
+
+		mockMvc.perform(get("/backend/autenticacao").with(httpBasic("lucas@tcghub.com", "lucas")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.usuario").value("lucas"));
+	}
+
+	@Test
+	void cadastroCriaContaRealEPerfilComunitarioAutomaticamenteERejeitaDuplicidades() throws Exception {
+		mockMvc.perform(post("/backend/autenticacao/cadastro")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{
+								  "usuario": "nami",
+								  "apelido": "NamiNavigator",
+								  "email": "nami@tcghub.com",
+								  "senha": "berri123",
+								  "cidade": "Cocoyasi",
+								  "descricao": "Navegadora dos Chapéus de Palha."
+								}
+								"""))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.usuario").value("nami"))
+				.andExpect(jsonPath("$.apelido").value("NamiNavigator"))
+				.andExpect(jsonPath("$.email").value("nami@tcghub.com"))
+				.andExpect(jsonPath("$.perfilId").isNotEmpty());
+
+		mockMvc.perform(get("/backend/autenticacao").with(httpBasic("nami", "berri123")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.usuario").value("nami"));
+
+		mockMvc.perform(get("/backend/autenticacao").with(httpBasic("nami@tcghub.com", "berri123")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.usuario").value("nami"));
+
+		mockMvc.perform(get("/backend/comunidade/perfil-comunitario/visualizacao")
+						.with(httpBasic("nami", "berri123")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.usuario").value("nami"))
+				.andExpect(jsonPath("$.apelido").value("NamiNavigator"))
+				.andExpect(jsonPath("$.cidade").value("Cocoyasi"))
+				.andExpect(jsonPath("$.ehProprietario").value(true))
+				.andExpect(jsonPath("$.cartasColecaoDisponiveis[0].card_set_id").value("OP01-001"))
+				.andExpect(jsonPath("$.cartasColecaoDisponiveis[0].card_name").value("Roronoa Zoro"))
+				.andExpect(jsonPath("$.cartasColecaoDisponiveis[0].set_name").value("Romance Dawn"))
+				.andExpect(jsonPath("$.cartasColecaoDisponiveis[0].card_image")
+						.value("https://optcgapi.com/media/static/Card_Images/OP01-001.jpg"));
+
+		mockMvc.perform(post("/backend/autenticacao/cadastro")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"usuario":"NAMI","apelido":"OutraNami","email":"outra@tcghub.com","senha":"1234"}
+								"""))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.mensagem").isNotEmpty());
+
+		mockMvc.perform(post("/backend/autenticacao/cadastro")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"usuario":"robin","apelido":"NicoRobin","email":"NAMI@tcghub.com","senha":"1234"}
+								"""))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.mensagem").isNotEmpty());
+
+		mockMvc.perform(post("/backend/autenticacao/cadastro")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content("""
+								{"usuario":"robin","apelido":"luffybr","email":"robin@tcghub.com","senha":"1234"}
+								"""))
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.mensagem").isNotEmpty());
 	}
 
 	@Test
@@ -59,6 +129,9 @@ class ComunidadeControladoresTest {
 				.andExpect(jsonPath("$.apelido").value("LuffyBR"))
 				.andExpect(jsonPath("$.ehProprietario").value(true))
 				.andExpect(jsonPath("$.statusRelacao").value("PROPRIO"))
+				.andExpect(jsonPath("$.cartasFavoritas[0].card_set_id").value("OP01-001"))
+				.andExpect(jsonPath("$.cartasFavoritas[0].card_image")
+						.value("https://optcgapi.com/media/static/Card_Images/OP01-001.jpg"))
 				.andExpect(jsonPath("$.cartasColecaoDisponiveis").isNotEmpty());
 
 		mockMvc.perform(get("/backend/comunidade/perfil-comunitario/{id}/visualizacao", perfilLucasId)

@@ -166,19 +166,29 @@ public class PerfilComunitarioControlador {
 			Map<String, CartaColecaoResumo> catalogo) {
 		var resumo = catalogo.get(cartaId);
 		if (resumo == null) {
-			return new CartaDestaqueRecurso(cartaId, cartaId, cartaId, "SR", "Near Mint", "Vermelho",
-					BigDecimal.ZERO, null);
+			var imgPadrao = "https://optcgapi.com/media/static/Card_Images/" + cartaId + ".jpg";
+			return new CartaDestaqueRecurso(cartaId, cartaId, cartaId, "SR", "Near Mint", "Red", BigDecimal.ZERO,
+					imgPadrao, cartaId, cartaId, "OP-01", "Romance Dawn", "SR", "Red", "Character", "3", "5000",
+					"Straw Hat Crew", 1000, "Slash", BigDecimal.ZERO, BigDecimal.ZERO, cartaId, imgPadrao);
 		}
+		var img = resumo.getImagem().orElse(null);
 		return new CartaDestaqueRecurso(resumo.getCarta().toString(), resumo.getCodigo(), resumo.getNomeCarta(),
-				resumo.getRaridade(), resumo.getEdicaoCondicao(), resumo.getCor(), resumo.getPrecoMercado(),
-				resumo.getImagem().orElse(null));
+				resumo.getRaridade(), resumo.getEdicaoCondicao(), resumo.getCor(), resumo.getPrecoMercado(), img,
+				resumo.getCodigo(), resumo.getNomeCarta(), resumo.getColecao(), resumo.getNomeColecao(),
+				resumo.getRaridade(), resumo.getCor(), resumo.getTipoCarta(), resumo.getCustoCarta(),
+				resumo.getPoderCarta(), resumo.getSubTipos(), resumo.getContraAtaque(), resumo.getAtributo(),
+				resumo.getPrecoMercado(), resumo.getPrecoInventario(), resumo.getImagemId(), img);
 	}
 
 	private static CartaColecaoRecurso paraCartaColecaoRecurso(CartaColecaoResumo resumo, Set<String> idsFavoritas) {
 		var cartaId = resumo.getCarta().toString();
+		var img = resumo.getImagem().orElse(null);
 		return new CartaColecaoRecurso(cartaId, resumo.getCodigo(), resumo.getNomeCarta(), resumo.getRaridade(),
-				resumo.getEdicaoCondicao(), resumo.getCor(), resumo.getPrecoMercado(), resumo.getImagem().orElse(null),
-				idsFavoritas.contains(cartaId));
+				resumo.getEdicaoCondicao(), resumo.getCor(), resumo.getPrecoMercado(), img,
+				idsFavoritas.contains(cartaId), resumo.getCodigo(), resumo.getNomeCarta(), resumo.getColecao(),
+				resumo.getNomeColecao(), resumo.getRaridade(), resumo.getCor(), resumo.getTipoCarta(),
+				resumo.getCustoCarta(), resumo.getPoderCarta(), resumo.getSubTipos(), resumo.getContraAtaque(),
+				resumo.getAtributo(), resumo.getPrecoMercado(), resumo.getPrecoInventario(), resumo.getImagemId(), img);
 	}
 
 	private record RelacaoResumo(String status, @Nullable String amizadeId) {
@@ -198,11 +208,18 @@ public class PerfilComunitarioControlador {
 	}
 
 	public record CartaDestaqueRecurso(String cartaId, String codigo, String nome, String raridade,
-			String edicaoCondicao, String cor, BigDecimal precoMercado, @Nullable String imagem) {
+			String edicaoCondicao, String cor, BigDecimal precoMercado, @Nullable String imagem, String card_set_id,
+			String card_name, String set_id, String set_name, String rarity, String card_color, String card_type,
+			String card_cost, String card_power, String sub_types, int counter_amount, String attribute,
+			BigDecimal market_price, BigDecimal inventory_price, String card_image_id, @Nullable String card_image) {
 	}
 
 	public record CartaColecaoRecurso(String cartaId, String codigo, String nome, String raridade,
-			String edicaoCondicao, String cor, BigDecimal precoMercado, @Nullable String imagem, boolean jaDestacada) {
+			String edicaoCondicao, String cor, BigDecimal precoMercado, @Nullable String imagem, boolean jaDestacada,
+			String card_set_id, String card_name, String set_id, String set_name, String rarity, String card_color,
+			String card_type, String card_cost, String card_power, String sub_types, int counter_amount,
+			String attribute, BigDecimal market_price, BigDecimal inventory_price, String card_image_id,
+			@Nullable String card_image) {
 	}
 
 	public record PerfilVisualizacaoRecurso(String id, String usuario, String apelido, @Nullable String cidade,

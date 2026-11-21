@@ -1,12 +1,18 @@
 package com.cesar.tgchub.tcghub.ui.backend.comunidade;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.cesar.tgchub.tcghub.dominio.Autorizacao;
+import com.cesar.tgchub.tcghub.dominio.IUsuarioContaRepositorio;
+import com.cesar.tgchub.tcghub.dominio.UsuarioConta;
 import com.cesar.tgchub.tcghub.dominio.UsuarioIdentificador;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.Apelido;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.CartaIdentificador;
@@ -26,26 +32,40 @@ public class ComunidadeConfiguracao {
 	}
 
 	@Bean
-	ApplicationRunner inicializadorPerfisComunidade(IPerfilComunitarioRepositorio perfilRepositorio) {
+	ApplicationRunner inicializadorPerfisComunidade(IUsuarioContaRepositorio contaRepositorio,
+			IPerfilComunitarioRepositorio perfilRepositorio, PasswordEncoder codificadorSenha) {
 		return args -> {
-			criarSeAusente(perfilRepositorio, "lucas", "LuffyBR", "Recife",
+			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "lucas",
+					"lucas@tcghub.com", "lucas", Autorizacao.USUARIO, "LuffyBR", "Recife",
 					"Colecionador de One Piece TCG e jogador de torneios locais.",
 					List.of(new CartaIdentificador("OP01-001"), new CartaIdentificador("OP01-016")));
-			criarSeAusente(perfilRepositorio, "ricardo", "ZoroTC", "Olinda",
+			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "ricardo",
+					"ricardo@tcghub.com", "ricardo", Autorizacao.USUARIO, "ZoroTC", "Olinda",
 					"Foco em decks agressivos vermelhos e trocas presenciais.",
 					List.of(new CartaIdentificador("OP01-025")));
-			criarSeAusente(perfilRepositorio, "thiago", "SanjiOP", "Recife",
+			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "thiago",
+					"thiago@tcghub.com", "thiago", Autorizacao.USUARIO, "SanjiOP", "Recife",
 					"Colecionando coleções clássicas OP-01 a OP-05.", List.of());
-			criarSeAusente(perfilRepositorio, "u", "ColecionadorU", "Recife",
-					"Perfil padrão de testes do TCGHub.", List.of(new CartaIdentificador("OP01-001")));
+			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "u", "u@tcghub.com", "u",
+					Autorizacao.USUARIO, "ColecionadorU", "Recife", "Perfil padrão de testes do TCGHub.",
+					List.of(new CartaIdentificador("OP01-001")));
+			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "a", "admin@tcghub.com",
+					"a", Autorizacao.ADMINISTRADOR, "AdminTCGHub", "Recife",
+					"Conta administrativa oficial do TCGHub.", List.of());
 		};
 	}
 
-	private static void criarSeAusente(IPerfilComunitarioRepositorio repositorio, String usuario, String apelido,
-			String cidade, String descricao, List<CartaIdentificador> cartas) {
+	private static void criarContaEPerfilSeAusente(IUsuarioContaRepositorio contaRepositorio,
+			IPerfilComunitarioRepositorio perfilRepositorio, PasswordEncoder codificadorSenha, String usuario,
+			String email, String senha, Autorizacao autorizacao, String apelido, String cidade, String descricao,
+			List<CartaIdentificador> cartas) {
 		var usuarioId = new UsuarioIdentificador(usuario);
-		if (!repositorio.existePorUsuario(usuarioId)) {
-			repositorio.incluir(new PerfilComunitario(Optional.empty(), usuarioId, new Apelido(apelido),
+		if (!contaRepositorio.existePorUsuarioIgnoreCase(usuario)) {
+			var hash = Objects.requireNonNull(codificadorSenha.encode(senha));
+			contaRepositorio.salvar(new UsuarioConta(usuarioId, email, hash, autorizacao, Instant.now()));
+		}
+		if (!perfilRepositorio.existePorUsuario(usuarioId)) {
+			perfilRepositorio.incluir(new PerfilComunitario(Optional.empty(), usuarioId, new Apelido(apelido),
 					Optional.of(cidade), Optional.of(descricao), Optional.empty(),
 					Optional.of("Trocas presenciais aos fins de semana"), true, cartas));
 		}
