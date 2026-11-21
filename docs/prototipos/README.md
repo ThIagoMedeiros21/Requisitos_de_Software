@@ -1,308 +1,281 @@
-# Protótipos de Alta Fidelidade e Fluxos de Tela — TCGHub
+# Protótipos de Alta Fidelidade, Design System e Fluxos de Tela — TCGHub
 
 > [!NOTE]
-> Artefato de **DDD Preliminar e UX (Etapa 1 — Planejar, Onda 2)** cobrindo integralmente as **4 funcionalidades de Lucas Menezes** (`Perfil e amigos`, `Decks favoritos`, `Avaliação de cartas` e `Abertura preferida do anime One Piece`, incluindo a gestão administrativa em `adm`), em conformidade com [.agents.md](../../.agents.md), [tcghub/AGENTS.md](../../tcghub/AGENTS.md) e [desenvolver-frontend](../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md).
+> Artefato de **DDD Preliminar, Design System e UX** cobrindo integralmente as **4 funcionalidades de Lucas Menezes** (`Perfil e amigos`, `Decks favoritos`, `Avaliação de cartas` e `Abertura preferida do anime One Piece`, incluindo a gestão administrativa em `adm`), em conformidade com [.agents.md](../../.agents.md), [frontend-developer](../../.agents/skills/frontend-developer/SKILL.md) e o Design System Stitch **`Nautical Blue & White Marketplace`** (`projects/18247718655827442438`).
 
 ---
 
-## 1. Convenções Técnicas D5 Frontend e Padrão Visual
+## 1. Arquitetura Frontend Standalone (`/frontend`) e Design System Stitch
 
-### 1.1 Stack e Padrões de Componentes
-- **UI**: React 19.3.0 + Bootstrap 5.3.8 / React Bootstrap 2.10.10 (cabeçalhos, `Nav` por abas em pílula, `Card`, `Modal`, `Form`, `Badge`, `Button`, `Table`, `ProgressBar`, `Alert`, `Pagination`).
-- **Roteamento e Carregamento**: React Router 8.5.0 dentro de `RotaProtegida` (`ui-frontend/src/main/react/src/app/rotas.tsx`), com carregamento `lazy` de componente e `loader` por rota, tratamento de erros de loader via `ErroRota` (`ErrorBoundary`) e permissões de menu via `autorizacoesDe('<agregado>')` a partir de `GET /backend/autenticacao`.
-- **Estado Remoto e Mutações**: TanStack Query 5.104.0 (`queryOptions` + `clienteConsultas.ensureQueryData` no loader + `useSuspenseQuery` no componente; mutações via `useMutation` com `chamarApi` e `clienteConsultas.invalidateQueries`).
-- **Formulários e Feedback**: React Hook Form 7.90.0 com validação em linha (`Form.Control.Feedback`) e erros de backend publicados via `publicar('erro', mensagemErro(erro))` do `useNotificacoes`.
+### 1.1 Stack e Estrutura Feature-Based (`/frontend/src/`)
+- **Aplicação Desacoplada**: O frontend vive na raiz em `/frontend/` (independente do módulo Maven `tcghub/`), construído com **React 19.3.0**, **Vite 8.3.0**, **Tailwind CSS v4 (`@tailwindcss/vite`)**, **React Router 8.5.0**, **TanStack Query 5.104.0**, **React Hook Form 7.90.0** e **Zustand 5.1.0** — **sem Bootstrap** e **sem Angular**.
+- **Organização de Diretórios**:
+  - `src/styles/` — Design tokens CSS + `@theme` Tailwind v4 ([tokens.css](../../frontend/src/styles/tokens.css)) e estilos globais ([globals.css](../../frontend/src/styles/globals.css)).
+  - `src/lib/` — Cliente HTTP (`fetch` + CSRF/sessão para `/backend/...`), instância do `QueryClient` e utilitários compartilhados.
+  - `src/stores/` — Stores Zustand exclusivamente para estado efêmero de UI (abas ativas, modais abertos, filtros locais).
+  - `src/components/layout/` — `AppHeader` (navegação principal + busca global `⌘K` + badge de carrinho + menu do perfil), `MobileDrawer`, `CommunitySubNav` (pílulas da comunidade) e banners de notificação.
+  - `src/features/auth/` — Autenticação (`/login`, contexto de sessão e `RequireAuth`).
+  - `src/features/community/` — Componentes, hooks TanStack Query e formulários de `PerfilComunitario`, `Amizade`, `DeckFavorito`, `AvaliacaoProduto` e `AberturaPreferida`.
+  - `src/routes/` — Mapeamento de rotas de mercado em React Router (`lazy` + `ErrorBoundary`).
+- **Integração com BFF (`/backend/...`)**: O servidor Vite (`pnpm dev` na porta `5173`/`4200`) faz proxy para o `ui-backend` Spring Boot (`http://localhost:8080/backend/...`), preservando os endpoints REST do BFF sem acoplar o roteamento visual do React às convenções internas de backend.
 
-### 1.2 Convenção de Rotas D5 (`/<subdominio>/<agregado>/<substantivo-singular>`)
+### 1.2 Tabela Completa de Tokens CSS — *Nautical Blue & White Marketplace*
 
-> Conforme [desenvolver-frontend](../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md), o último segmento da rota é um **substantivo singular** (`pesquisa`, `inclusao`, `alteracao`, `exclusao`, `visualizacao`, `ranking`). Todas as operações BFF usam prefixo `/backend`: `GET` no mesmo caminho da rota (para o `loader`) e `POST` substituindo o último segmento pelo nome da ação (`incluir`, `alterar`, `excluir`, `inativar`, `reativar`, `fixar-destaque`, `remover-destaque`, `aceitar`, `recusar`, `cancelar`, `remover`, `ocultar`, `reexibir`).
+Fonte oficial: Stitch (`projects/18247718655827442438/screens/9084713632167662986` — `DESIGN.md`), implementados em [tokens.css](../../frontend/src/styles/tokens.css) (`:root` + `@theme` Tailwind v4) e [globals.css](../../frontend/src/styles/globals.css).
 
-| Subdomínio | Agregado | Rotas Frontend (React Router) | Operações BFF (`/backend/...`) | Origem D5 |
+#### Cores Semânticas e de Marca
+
+| Categoria | Token CSS (`:root` / `@theme`) | Valor Hex | Papel na Interface |
+| :--- | :--- | :--- | :--- |
+| **Marca Náutica** | `--color-deep-navy` | `#0a2540` | Âncora estrutural: cabeçalhos, abas ativas, texto principal, pílulas de raridade (`LÍDER / SEC`, `SR`) |
+| **Marca Náutica** | `--color-ocean-blue` | `#0f4c81` | Ação primária (CTAs: *Adicionar*, *Ver Perfil*, *Salvar Avaliação*), anéis de foco, ícones de destaque |
+| **Marca Náutica** | `--color-primary` | `#00355f` | Estado ativo no header superior (`Comunidade`), marca *TCGHub* |
+| **Marca Náutica** | `--color-cobalt-accent` | `#2563eb` | Micro-acentos, indicador de aba ativa, indicador online, tendências e links (`Mkt Base`) |
+| **Marca Náutica** | `--color-sky-tint` | `#e0ecf8` | Hover suave de botões secundários, badges informativos (`4 de 4 slots preenchidos`, `Colecionador Verificado`) |
+| **Superfícies** | `--color-surface` / `--color-background` | `#f6fafe` | Canvas principal da aplicação (`bg-surface`) |
+| **Superfícies** | `--color-pure-white` / `--color-surface-container-lowest` | `#ffffff` | Cards de perfil/colecionador/carta, modais, barra de subnavegação (`bg-pure-white`) |
+| **Superfícies** | `--color-off-white-bg` / `--color-surface-container-low` | `#f0f4f8` | Campos internos, placeholders de imagem, botões neutros e caixas de resumo |
+| **Superfícies** | `--color-surface-container` | `#eaeef2` | Hover de superfícies neutras, badges secundários |
+| **Superfícies** | `--color-surface-container-high` / `-highest` | `#e4e9ed` / `#dfe3e7` | Containers terciários e estados pressionados |
+| **Superfícies** | `--color-surface-dim` | `#d6dade` | Divisores de baixa ênfase |
+| **Superfícies** | `--color-inverse-surface` / `--color-inverse-on-surface` | `#2c3134` / `#edf1f5` | Tooltips e toasts escuros |
+| **Texto & Bordas** | `--color-text-primary` / `--color-on-surface` | `#0a2540` / `#171c1f` | Títulos e texto principal |
+| **Texto & Bordas** | `--color-text-muted` / `--color-on-surface-variant` | `#475569` / `#42474f` | Bios, subtítulos, metadados e rótulos secundários |
+| **Texto & Bordas** | `--color-secondary` | `#49607e` | Ícones auxiliares e textos de apoio na subnavegação |
+| **Texto & Bordas** | `--color-outline` / `--color-outline-variant` | `#727780` / `#c2c7d1` | Placeholders e contornos de suporte |
+| **Texto & Bordas** | `--color-ice-border` / `--color-steel-border` | `#e2e8f0` / `#cbd5e1` | Bordas 1px de cards (`border-ice-border`) e anéis de inputs (`ring-steel-border`) |
+| **Status Monocromático** | `--color-status-positive-bg` / `-text` | `#ebf5ff` / `#1d4ed8` | Elegível, *Amigo Mútuo*, *Compra Verificada*, *Em Estoque* |
+| **Status Monocromático** | `--color-status-warning-bg` / `-text` | `#f0f7ff` / `#1e40af` | Avisos de duplicidade já existente, baixa disponibilidade |
+| **Status Monocromático** | `--color-status-critical-bg` / `-text` | `#0a2540` / `#ffffff` | Alertas críticos de alto contraste |
+| **Erro de Domínio** | `--color-error` / `-container` / `--color-on-error-container` | `#ba1a1a` / `#ffdad6` / `#93000a` | Validações rejeitadas (autoamizade, apelido em uso, nota inválida) |
+
+#### Tipografia, Espaçamento, Raios e Elevação
+
+| Grupo | Tokens Principais | Valores | Uso |
+| :--- | :--- | :--- | :--- |
+| **Famílias** | `--font-display`, `--font-sans` | `Montserrat`, `Inter` | Títulos geométricos (`Montserrat`) + corpo/UI/tabelas (`Inter`) |
+| **Display & Títulos** | `display-lg`, `headline-xl`, `headline-lg`, `headline-md`, `headline-sm` | `48/56px (800)`, `36/44px (700)`, `24/32px (700)`, `20/28px (600)`, `16/24px (600)` | Títulos de página, seções, modais e cards |
+| **Corpo & Rótulos** | `body-lg`, `body-md`, `body-sm`, `label-md`, `label-sm` | `16/24px (400)`, `14/20px (400)`, `12/16px (400)`, `14/20px (500)`, `12/16px (600)` | Descrições, abas, botões, chips e mensagens de erro |
+| **Numéricos Tabulares** | `tabular-price`, `tabular-stat`, `.tabular-nums` | `18/24px (700)`, `14/20px (600)` + `tabular-nums` | Preços (`R$ 1.850,00`), códigos (`OP01-001`), contagens e rankings |
+| **Espaçamento (Base 8pt)** | `space-xs..xxl`, `gutter`, `gutter-md`, `margin`, `margin-md`, `margin-lg` | `0.25rem` (`4px`), `0.5rem`, `1rem`, `1.5rem`, `2rem`, `3rem` | Ritmo interno de cards, grids (`gap-space-md`) e container (`max-w-7xl px-margin md:px-margin-lg`) |
+| **Raios** | `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl`, `--radius-2xl`, `--radius-full` | `0.25rem`, `0.375rem` (`6px`), `0.5rem` (`8px`), `0.75rem` (`12px`), `1rem` (`16px`), `9999px` | Molduras de cartas (`6px`), botões/inputs (`8px`), cards (`12px`/`16px`), chips (`full`) |
+| **Sombras Náuticas** | `--shadow-level-1` .. `--shadow-level-4` | Níveis 1–4 com tint `#0a2540` | Repouso de card, hover elevado, drawer lateral e backdrop/modal |
+
+---
+
+## 2. Mapeamento: Telas do Drive (`requisitos`) ↔ Stitch Screen IDs ↔ Rotas/Componentes `/frontend/src/`
+
+| Protótipo (Drive) | Título / Fluxo | Stitch Screen ID (`projects/18247718655827442438/screens/...`) | Rota Frontend (`/frontend`) | Componente(s) React (`src/...`) & Endpoints BFF |
 | :--- | :--- | :--- | :--- | :--- |
-| `adm` | `abertura` | `/adm/abertura/pesquisa`<br>`/adm/abertura/inclusao`<br>`/adm/abertura/:id/visualizacao`<br>`/adm/abertura/:id/alteracao`<br>`/adm/abertura/:id/exclusao` | `GET /backend/adm/abertura/pesquisa`<br>`GET .../inclusao` / `POST .../incluir`<br>`GET .../:id/visualizacao`<br>`GET .../:id/alteracao` / `POST .../:id/alterar`<br>`GET .../:id/exclusao` / `POST .../:id/excluir`<br>`POST /backend/adm/abertura/:id/inativar`<br>`POST /backend/adm/abertura/:id/reativar` | Padrão D5 + extras (`visualizacao`, `inativar`, `reativar`) |
-| `comunidade` | `perfil-comunitario` | `/comunidade/perfil-comunitario/visualizacao`<br>`/comunidade/perfil-comunitario/:id/visualizacao`<br>`/comunidade/perfil-comunitario/:id/alteracao` | `GET /backend/comunidade/perfil-comunitario/visualizacao`<br>`GET .../:id/visualizacao`<br>`GET .../:id/alteracao` / `POST .../:id/alterar`<br>`POST /backend/comunidade/perfil-comunitario/:id/fixar-destaque`<br>`POST /backend/comunidade/perfil-comunitario/:id/remover-destaque` | Padrão D5 (`alteracao`) + extras (`visualizacao`, `fixar-destaque`, `remover-destaque`) |
-| `comunidade` | `amizade` | `/comunidade/amizade/pesquisa`<br>`/comunidade/amizade/inclusao`<br>`/comunidade/amizade/:id/visualizacao` | `GET /backend/comunidade/amizade/pesquisa`<br>`GET .../inclusao` / `POST .../incluir`<br>`GET .../:id/visualizacao`<br>`POST /backend/comunidade/amizade/:id/aceitar`<br>`POST /backend/comunidade/amizade/:id/recusar`<br>`POST /backend/comunidade/amizade/:id/cancelar`<br>`POST /backend/comunidade/amizade/:id/remover` | Padrão D5 (`pesquisa`, `inclusao`) + extras (`visualizacao`, `aceitar`, `recusar`, `cancelar`, `remover`) |
-| `comunidade` | `deck-favorito` | `/comunidade/deck-favorito/pesquisa`<br>`/comunidade/deck-favorito/inclusao`<br>`/comunidade/deck-favorito/:id/visualizacao`<br>`/comunidade/deck-favorito/:id/exclusao` | `GET /backend/comunidade/deck-favorito/pesquisa`<br>`GET .../inclusao` / `POST .../incluir`<br>`GET .../:id/visualizacao`<br>`GET .../:id/exclusao` / `POST .../:id/excluir`<br>`POST /backend/comunidade/deck-favorito/ocultar`<br>`POST /backend/comunidade/deck-favorito/reexibir` | Padrão D5 (`pesquisa`, `inclusao`, `exclusao`) + extras (`visualizacao`, `ocultar`, `reexibir`) |
-| `comunidade` | `avaliacao-produto` | `/comunidade/avaliacao-produto/pesquisa`<br>`/comunidade/avaliacao-produto/inclusao`<br>`/comunidade/avaliacao-produto/:id/alteracao`<br>`/comunidade/avaliacao-produto/:id/visualizacao` | `GET /backend/comunidade/avaliacao-produto/pesquisa`<br>`GET .../inclusao` / `POST .../incluir`<br>`GET .../:id/alteracao` / `POST .../:id/alterar`<br>`GET .../:id/visualizacao` | Padrão D5 (`pesquisa`, `inclusao`, `alteracao`) + extra (`visualizacao`) |
-| `comunidade` | `abertura-preferida` | `/comunidade/abertura-preferida/pesquisa`<br>`/comunidade/abertura-preferida/inclusao`<br>`/comunidade/abertura-preferida/:id/visualizacao`<br>`/comunidade/abertura-preferida/ranking` | `GET /backend/comunidade/abertura-preferida/pesquisa`<br>`GET .../inclusao` / `POST .../incluir`<br>`GET .../:id/visualizacao`<br>`GET /backend/comunidade/abertura-preferida/ranking`<br>`POST /backend/comunidade/abertura-preferida/ocultar`<br>`POST /backend/comunidade/abertura-preferida/reexibir` | Padrão D5 (`pesquisa`, `inclusao`) + extras (`visualizacao`, `ranking`, `ocultar`, `reexibir`) |
+| *(Acesso)* | Autenticação do usuário | — | `/login` | `features/auth/LoginPage.tsx` (`GET/POST /backend/autenticacao`) |
+| **P01** | Visão geral do perfil (próprio e público) | `a20513d71abd449ba2b482f6bcc24089` (`comunidade_perfil_rede_amigos.html`) / `9b383bb48db94fe485d3e71979323c57` (`perfil_mugiwara_luffy.html`) | `/comunidade/perfil`<br>`/comunidade/perfil/:id` | `features/community/profile/ProfilePage.tsx`, `ProfileHeaderCard.tsx`, `CommunitySubNav.tsx`<br>BFF: `GET /backend/comunidade/perfil-comunitario/visualizacao`, `GET .../:id/visualizacao` |
+| **P02** | Edição do perfil (Modal) | `14474086553e45008b8331db0009b212` (`meu_perfil_modal_editar.html`) | Modal em `/comunidade/perfil` | `features/community/profile/EditProfileModal.tsx`<br>BFF: `GET .../:id/alteracao`, `POST .../:id/alterar` |
+| **P03** | Cartas favoritas preenchidas (4 slots) | `a20513d71abd449ba2b482f6bcc24089` | `/comunidade/perfil` | `features/community/profile/FavoriteCardsGrid.tsx`<br>BFF: `POST .../:id/remover-destaque` |
+| **P04** | Espaço disponível nas cartas favoritas | `a20513d71abd449ba2b482f6bcc24089` (estado `< 4` slots) | `/comunidade/perfil` | `features/community/profile/FavoriteCardsGrid.tsx` |
+| **P05** | Seleção de carta favorita (Modal) | `a20513d71abd449ba2b482f6bcc24089` (modal *Escolher Carta Favorita*) | Modal em `/comunidade/perfil` | `features/community/profile/SelectFavoriteCardModal.tsx`<br>BFF: `POST .../:id/fixar-destaque` |
+| **P19** | Buscar colecionadores e solicitar amizade | `41b6841da5df4aa1933c977876f1b673` (`buscar_colecionadores.html`) | `/comunidade/colecionadores` | `features/community/friends/FindCollectorsPage.tsx`<br>BFF: `GET /backend/comunidade/amizade/inclusao`, `POST /backend/comunidade/amizade/incluir` |
+| **P20** | Rede de amigos e solicitações pendentes | `f30b49e5ac5b47f793be5f623ad26d43` (`rede_de_amigos.html`) | `/comunidade/amigos` | `features/community/friends/FriendsNetworkPage.tsx`<br>BFF: `GET /backend/comunidade/amizade/pesquisa`, `POST .../aceitar`, `recusar`, `cancelar`, `remover` |
+| **P06** | Perfil com decks e wishlist | `a778927205374bb68481d5bb1f1dc11d` / `9b383bb48db94fe485d3e71979323c57` | `/comunidade/perfil` | `ProfilePage.tsx` (seção 2 colunas: `FavoriteDecksSection` + `PublicWishlistCard`) |
+| **P07** | Lista de decks favoritos | `a778927205374bb68481d5bb1f1dc11d` | `/comunidade/decks-favoritos` | `features/community/decks/FavoriteDecksPage.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST .../:id/excluir`, `ocultar`, `reexibir` |
+| **P08** | Adicionar deck favorito (Modal) | `a778927205374bb68481d5bb1f1dc11d` (modal *Adicionar Deck Favorito*) | Modal em `/comunidade/decks-favoritos` | `features/community/decks/AddFavoriteDeckModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/inclusao`, `POST .../incluir` |
+| **P09** | Composição do deck favorito (Modal) | `d26c9d5f978f422fa021153ec9cfe885` | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil/:id` | `features/community/decks/DeckCompositionModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/:id/visualizacao` |
+| **P10** | Coleção pessoal como entrada da avaliação | `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090` | `/minha-colecao` *(entrada de apoio)* | `features/community/reviews/CollectionReviewEntryCard.tsx` |
+| **P11** | Detalhes da carta e avaliações | `21c3501f0e844d2388377f55414687b4` | `/catalogo/cartas/:id` *(entrada de apoio)* | `features/community/reviews/ProductReviewsSection.tsx` |
+| **P12** | Avaliações da comunidade | `21c3501f0e844d2388377f55414687b4` | Seção em `/catalogo/cartas/:id` | `features/community/reviews/ProductReviewsSection.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/pesquisa` |
+| **P13** | Nova avaliação (Modal) | `c10dd91737b54bf49b75fb52fefae957` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/inclusao`, `POST .../incluir` |
+| **P14** | Atualização da avaliação (Modal) | `233e6f9b6f424215954a85c92d59f53e` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET .../:id/alteracao`, `POST .../:id/alterar` |
+| **P15** | Gestão administrativa das aberturas | `b2a45fd86fd84870b32e71fbd1c43fc4` | `/adm/aberturas` | `features/admin/openings/AdminOpeningsPage.tsx`<br>BFF: `GET /backend/adm/abertura/pesquisa`, `POST .../:id/{inativar,reativar,excluir}` |
+| **P16** | Cadastro/edição administrativo de abertura (Modal) | `b2a45fd86fd84870b32e71fbd1c43fc4` (modal *Cadastrar abertura*) | Modal em `/adm/aberturas` | `features/admin/openings/OpeningFormModal.tsx`<br>BFF: `GET/POST /backend/adm/abertura/{inclusao,incluir,:id/alteracao,:id/alterar}` |
+| **P17** | Catálogo e ranking de aberturas | `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d` | `/comunidade/abertura-preferida` | `features/community/openings/OpeningsCatalogPage.tsx`<br>BFF: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking}`, `POST .../{incluir,ocultar,reexibir}` |
+| **P18** | Detalhes da abertura preferida | `eb3be1f6e46e4ad8ae22f2fb8b39731e` | `/comunidade/abertura-preferida/:id` | `features/community/openings/OpeningDetailsPage.tsx`<br>BFF: `GET /backend/comunidade/abertura-preferida/:id/visualizacao` |
 
 ---
 
-## 2. Protótipos de Alta Fidelidade — `comunidade / F001`: Perfil e Amigos
+## 3. Protótipos de Alta Fidelidade — `comunidade / F001`: Perfil e Amigos
 
 ### Protótipo 1 — Visão Geral do Perfil (`P01`)
-- **Rota D5**: `/comunidade/perfil-comunitario/visualizacao` (próprio) e `/comunidade/perfil-comunitario/:id/visualizacao` (visitante).
+- **Rota Frontend**: `/comunidade/perfil` (próprio) e `/comunidade/perfil/:id` (visitante, ex.: `@MugiwaraLuffy` em `perfil_mugiwara_luffy.html`).
 - **Operações BFF**: `GET /backend/comunidade/perfil-comunitario/visualizacao` | `GET /backend/comunidade/perfil-comunitario/:id/visualizacao`.
-- **Layout e Componentes (React Bootstrap 5)**:
-  - **Barra de navegação comunitária**: Abas em pílula (`Nav variant="pills"`): `Meu Perfil` (ativo), `Decks Favoritos`, `Minha Coleção`, `Rede de Amigos`, `Buscar Colecionadores`, `Abertura Preferida`.
-  - **Card de Cabeçalho do Perfil (`Card`)**: Avatar circular com indicador de status, título com apelido comunitário (`TrafalgarAce_99`) + badge `Colecionador Verificado`, descrição/bio, metadados (`Membro desde ...`, `Cidade`, `Avaliação`), e na direita botão `Editar Perfil` (somente proprietário) + botão de compartilhamento (ou ações de amizade quando visitante: `Adicionar Amigo`, `Solicitação Pendente` / `Cancelar`, `Aceitar / Recusar`, `Remover Amigo`).
-  - **Seção `Cartas Favoritas`**: Título + subtítulo `"Destaques da coleção pessoal expostos na comunidade (Máximo de 4 slots estritos)"`, badge `X de 4 slots preenchidos`, botão `Gerenciar Slots` (proprietário) e grid `Row/Col` com 4 cards.
-  - **Seção inferior em 2 colunas (`Row`)**: Esquerda `Decks Favoritos` + botão `+ Adicionar deck favorito`; Direita `Wishlist Pública` (quando habilitada nas preferências).
-  - **Bloco de Abertura Preferida**: Exibido quando configurada e pública (ou sempre visível para o proprietário com selo de oculta; quando visitante é amigo e ambos têm mesma abertura pública, exibe selo de correspondência).
+- **Layout e Componentes (Tailwind v4 + Nautical Design System)**:
+  - **Barra Superior (`AppHeader`)**: Fundo `bg-pure-white/90 backdrop-blur-xl`, logo `TCGHub`, links (`Catálogo`, `Decks`, `Comunidade` ativo em `bg-primary text-pure-white` com sublinhado `bg-cobalt-accent`, `Wishlist`), busca global `⌘K`, carrinho e botão de avatar; no mobile, menu abre `MobileDrawer`.
+  - **Sub-navegação Comunitária (`CommunitySubNav`)**: Pílulas em container `bg-pure-white rounded-xl p-space-sm border-ice-border/60`: `Meu Perfil` (ativo em `bg-deep-navy text-pure-white`), `Minha Coleção`, `Rede de Amigos (N)`, `Buscar Colecionadores`, `Abertura Preferida`.
+  - **Card de Cabeçalho do Perfil**: `bg-pure-white rounded-xl p-space-lg shadow-sm border-ice-border/60`, avatar circular `w-20 h-20` com indicador online `bg-cobalt-accent`, `h1` `font-headline-lg text-deep-navy` (`TrafalgarAce_99`) + pílula `bg-sky-tint text-ocean-blue` (`Colecionador Verificado`), bio em `text-text-muted`, metadados (`Membro desde ...`, `Cidade`, `Avaliação`), e à direita botões `Editar Perfil` + `share` (ou, para visitante, badge `Amigo Mútuo` / ações de amizade e `Ver Wishlist`).
+  - **Seção `Cartas Favoritas`**: Subtítulo `"Destaques da coleção pessoal expostos na comunidade (Máximo de 4 slots estritos)"`, badge `X de 4 slots preenchidos`, botão `Gerenciar Slots` (proprietário) e grid responsivo `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md`.
+  - **Seção Inferior 2 Colunas**: Esquerda `Decks Favoritos`; Direita `Wishlist Pública` (quando habilitada).
 - **Estados**:
-  - **Principal**: Exibe todos os blocos preenchidos.
-  - **Vazio**: Bio vazia exibe placeholder suave `"Nenhuma descrição adicionada"`; 0 destaques exibe 4 cards pontilhados `Slot Disponível`.
-  - **Carregamento**: Skeleton em `Card` via `Suspense` enquanto `ensureQueryData` resolve.
-  - **Erro**: `404` de `:id` inexistente aciona `ErroRota` com mensagem `"Perfil comunitário não encontrado"`.
-  - **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy`)**: Visitante não vê botões `Editar Perfil`, `Gerenciar Slots`, `×` de remoção de destaque, nem `+ Adicionar deck favorito`. Se `exibirDecksFavoritos == false` ou `aberturaPreferida == OCULTA`, o Proxy omite os respectivos blocos para o visitante.
+  - **Principal**: Todos os blocos visíveis conforme autorização.
+  - **Vazio**: Bio vazia exibe placeholder suave; 0 destaques exibe 4 slots pontilhados para o proprietário ou estado informativo para visitante.
+  - **Carregamento**: Skeleton em `bg-surface-container-low` enquanto TanStack Query carrega.
+  - **Erro**: `:id` inexistente exibe tela de erro tratada (`Perfil comunitário não encontrado`) com atalho de retorno.
+  - **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy`)**: Visitante não visualiza controles de edição, remoção de destaque nem `Gerenciar Slots`. Se `decksFavoritosVisiveis == false` ou `aberturaPreferida == OCULTA`, o Proxy omite esses blocos para visitantes.
 
 ### Protótipo 2 — Edição do Perfil (`P02`)
-- **Rota D5**: `/comunidade/perfil-comunitario/:id/alteracao` (renderizado em `Modal` sobre o perfil ou rota dedicada).
+- **Rota Frontend**: Modal aberto sobre `/comunidade/perfil` (Stitch `meu_perfil_modal_editar.html` — `14474086553e45008b8331db0009b212`).
 - **Operações BFF**: `GET /backend/comunidade/perfil-comunitario/:id/alteracao` e `POST /backend/comunidade/perfil-comunitario/:id/alterar`.
-- **Layout e Campos (`React Hook Form` + `Modal`)**:
-  - Título `Editar Perfil`.
-  - **Foto de Perfil**: Prévia circular + aviso `"PNG, JPG ou GIF recomendados até 5MB"`, botões `Alterar Foto` e `Remover`.
-  - **Apelido Comunitário** (`@`): Campo texto obrigatório; helper `"Seu identificador único para amigos, trocas e cotações."`.
-  - **Cidade e Estado**: Campo texto com ícone de localização (ex.: `São Paulo, SP`).
-  - **Bio / Descrição de Perfil**: `Form.Control as="textarea"` com contador ao vivo `X / 200`.
-  - **Visibilidade e Preferências**: Checkboxes `Wishlist pública com token seguro` (`"Permite que membros da comunidade cotem e proponham trocas diretamente."`) e `Exibir Decks Favoritos no perfil` (`"Mostra suas listas ativas no formato oficial Bandai para outros colecionadores."`).
-  - **Rodapé**: `Cancelar` (descarta rascunho e preserva estado anterior) e `Salvar Alterações`.
+- **Layout e Campos (`React Hook Form`)**:
+  - Modal sobre backdrop `bg-deep-navy/55 backdrop-blur-sm` (`shadow-level-4`), título `Editar Perfil`.
+  - **Foto de Perfil**: Prévia circular, aviso `"PNG, JPG ou GIF recomendados até 5MB"`, botões `Alterar Foto` e `Remover`.
+  - **Apelido Comunitário** (`@`): Campo texto obrigatório com prefixo `@` e helper `"Seu identificador único para amigos, trocas e cotações."`.
+  - **Cidade e Estado**: Input com ícone de localização (`São Paulo, SP`).
+  - **Bio / Descrição de Perfil**: `textarea` com contador ao vivo `X / 200`.
+  - **Visibilidade e Preferências**: Checkboxes `Wishlist pública com token seguro` e `Exibir Decks Favoritos no perfil`.
+  - **Rodapé**: `Cancelar` (ghost, fecha sem mutação preservando estado anterior) e `Salvar Alterações` (`bg-ocean-blue hover:bg-deep-navy text-pure-white`).
 - **Validações e Erros**:
-  - Apelido vazio → erro em linha `"O apelido é obrigatório."`
-  - Apelido já usado por outro usuário (inclusive variação de caixa, ex.: `ZoroTC` vs. `zorotc`) → `publicar('erro', 'O apelido "..." já está em uso.')`.
-  - Tentativa de editar `:id` de outro usuário → bloqueio no `PerfilComunitarioVisibilidadeProxy` com erro de autorização (`403`).
+  - Apelido vazio → erro em linha (`text-error`).
+  - Apelido já usado por outro usuário (inclusive variação de caixa, ex.: `ZoroTC` vs. `zorotc`) → banner/toast em `bg-error-container text-on-error-container`.
+  - Tentativa de editar `:id` de outro usuário → rejeitada pelo `PerfilComunitarioVisibilidadeProxy` (`403`).
 
 ### Protótipo 3 — Cartas Favoritas Preenchidas (`P03`)
-- **Rota D5**: `/comunidade/perfil-comunitario/visualizacao` (seção `Cartas Favoritas`).
+- **Rota Frontend**: Seção `Cartas Favoritas` em `/comunidade/perfil`.
 - **Operações BFF**: `POST /backend/comunidade/perfil-comunitario/:id/remover-destaque`.
 - **Layout e Componentes**:
-  - Grid de 4 cards (`4 de 4 slots preenchidos`), cada card exibindo: badges de raridade (`LÍDER / SEC`, `SR`, `SEC`) e edição/condição (`Edição Colecionador`, `Holo Foil`, `Art Alternativa`, `Near Mint`), botão circular `×` no canto superior direito (somente proprietário), imagem da carta, tag de cor (`Vermelho`, `Verde`, `Azul`), nome da carta, código (`OP01-001`), preço (`R$ 1.850,00 • Mkt Base`), botão `Ver no Catálogo` e atalho de bookmark.
-- **Estados**:
-  - **Proprietário vs. Visitante**: Visitante vê a vitrine e `Ver no Catálogo`, sem botões `×` e `Gerenciar Slots`.
-  - **Erro**: Falha ao remover destaque publica erro via `useNotificacoes`.
+  - 4 cards com proporção `aspect-[2.5/3.5]` (`rounded-lg`), chip top-left `bg-deep-navy text-pure-white` (`LÍDER / SEC`, `SR`, `SEC`), chip top-right `bg-pure-white/95 text-ocean-blue` (`Edição Colecionador`, `Holo Foil`, `Art Alternativa`, `Near Mint`), botão circular `×` (hover `bg-error`, somente proprietário), tag de cor bottom-left (`Vermelho`, `Verde`, `Azul`), nome em `font-headline-sm`, código (`OP01-001`), preço em `font-tabular-price` (`R$ 1.850,00`), selo `Mkt Base`, botão `Ver no Catálogo` e atalho de bookmark.
 
 ### Protótipo 4 — Espaço Disponível nas Cartas Favoritas (`P04`)
-- **Rota D5**: `/comunidade/perfil-comunitario/visualizacao` (estado com `< 4` slots ocupados).
+- **Rota Frontend**: Seção `Cartas Favoritas` em `/comunidade/perfil` quando há `< 4` slots ocupados.
 - **Layout e Componentes**:
-  - Badge atualizado para `3 de 4 slots preenchidos`.
-  - O 4º card assume estilo pontilhado (`border-dashed bg-light`) com ícone `+`, título `"Slot Disponível"`, subtítulo `"Toque para adicionar da coleção"` e botão primário `+ Adicionar Carta` abaixo do slot.
-- **Estados**:
-  - **Vazio (0 de 4)**: Para o proprietário, exibe até 4 slots disponíveis com `+ Adicionar Carta`; para visitante, exibe estado informativo `"Este colecionador ainda não destacou cartas favoritas"`.
+  - Contador atualizado para `X de 4 slots preenchidos`.
+  - Slots livres renderizam card pontilhado (`border-2 border-dashed border-steel-border bg-surface-container-low/60`) com ícone `+`, título `"Slot Disponível"`, subtítulo `"Toque para adicionar da coleção"` e CTA `+ Adicionar Carta` em `bg-ocean-blue text-pure-white`.
 
 ### Protótipo 5 — Seleção de Carta Favorita (`P05`)
-- **Rota D5**: Modal acionado a partir de `/comunidade/perfil-comunitario/visualizacao` (`Slot Disponível` / `+ Adicionar Carta`).
-- **Operações BFF**: `POST /backend/comunidade/perfil-comunitario/:id/fixar-destaque` (lista cartas da coleção do usuário).
+- **Rota Frontend**: Modal `Escolher Carta Favorita` acionado em `/comunidade/perfil`.
+- **Operações BFF**: `POST /backend/comunidade/perfil-comunitario/:id/fixar-destaque`.
 - **Layout e Componentes**:
-  - `Modal` título `Escolher Carta Favorita`.
-  - `Alert variant="info"`: `"Regra de Negócio (4 Slots Estritos): Selecione uma carta da sua coleção para alocar no slot disponível da vitrine comunitária."`
-  - Lista `CARTAS DISPONÍVEIS DA COLEÇÃO` com miniatura, nome, código • raridade • cor • preço e botão `Fixar Slot` (desabilitado/indicado se já estiver nos destaques).
+  - Banner informativo `bg-status-positive-bg text-status-positive-text`: `"Regra de Negócio (4 Slots Estritos): Selecione uma carta da sua coleção para alocar no slot disponível da vitrine comunitária."`
+  - Lista `CARTAS DISPONÍVEIS DA COLEÇÃO` com miniatura, código • raridade • cor • preço tabular e botão `Fixar Slot`.
   - Rodapé `Cancelar`.
-- **Validações, Erros e Estados**:
-  - **Vazio**: Se coleção vazia ou todas já fixadas, exibe `"Nenhuma nova carta disponível na sua coleção para fixação."`
-  - **Erro de regra**: Tentar fixar 5ª carta ou carta duplicada retorna erro via `publicar('erro', mensagemErro(erro))` (`"Limite de 4 destaques atingido"` / `"Carta já está nos destaques"`).
+- **Validações e Erros**: Rejeita se limite de 4 já atingido ou carta duplicada (`bg-error-container text-on-error-container`).
 
-### Protótipo 19 (Complementar Amigos) — Buscar Colecionadores e Enviar Solicitação (`P19`)
-- **Rota D5**: `/comunidade/amizade/pesquisa` e `/comunidade/amizade/inclusao`.
-- **Operações BFF**: `GET /backend/comunidade/amizade/pesquisa`, `GET /backend/comunidade/amizade/inclusao`, `POST /backend/comunidade/amizade/incluir`.
+### Protótipo 19 — Buscar Colecionadores e Solicitar Amizade (`P19`)
+- **Rota Frontend**: `/comunidade/colecionadores` (Stitch `buscar_colecionadores.html` — `41b6841da5df4aa1933c977876f1b673`).
+- **Operações BFF**: `GET /backend/comunidade/amizade/inclusao?termo=...` e `POST /backend/comunidade/amizade/incluir`.
 - **Layout e Componentes**:
-  - Aba `Buscar Colecionadores` na navegação comunitária.
-  - Barra de busca por apelido ou cidade (`Buscar colecionador por apelido...`).
-  - Lista/cards de colecionadores com avatar, apelido, cidade, selo de abertura preferida pública (se houver) e botão contextual: `Adicionar Amigo`, `Solicitação Enviada` (com atalho `Cancelar`), `Responder Solicitação` ou `Amigos` + `Ver Perfil`.
-- **Validações e Erros**:
-  - Impede enviar solicitação para si mesmo, usuário inexistente, amizade já ativa ou solicitação pendente duplicada (exibe feedback via `useNotificacoes`).
-  - **Vazio**: `"Nenhum colecionador encontrado para o termo pesquisado."`
+  - Layout em 12 colunas (`lg:col-span-7` busca + painel dinâmico de validação + explicação de conexão bilateral; `lg:col-span-5` sugestões/resultados).
+  - Input de busca por `@apelido` ou cidade com botão `Adicionar` (`bg-ocean-blue text-pure-white`) e lista de sugestões com avatar, apelido, cidade e status da relação (`NENHUMA`, `PENDENTE_ENVIADA`, `PENDENTE_RECEBIDA`, `AMIGO`).
+  - Painel de regras/feedback usando os tokens semânticos Stitch:
+    - Auto-adição bloqueada: `bg-error-container text-on-error-container` (`block`)
+    - Solicitação duplicada ou amizade já existente: `bg-status-warning-bg text-status-warning-text` (`warning`)
+    - Colecionador elegível: `bg-status-positive-bg text-status-positive-text` (`check_circle`)
+- **Estados**: Estado vazio quando nenhum colecionador corresponde ao termo; rejeição explícita para usuário inexistente.
 
-### Protótipo 20 (Complementar Amigos) — Rede de Amigos e Solicitações Pendentes (`P20`)
-- **Rota D5**: `/comunidade/amizade/pesquisa` (abas internas `Meus Amigos`, `Recebidas`, `Enviadas`) e `/comunidade/amizade/:id/visualizacao`.
-- **Operações BFF**: `POST /backend/comunidade/amizade/:id/aceitar`, `POST /backend/comunidade/amizade/:id/recusar`, `POST /backend/comunidade/amizade/:id/cancelar`, `POST /backend/comunidade/amizade/:id/remover`.
+### Protótipo 20 — Rede de Amigos e Solicitações Pendentes (`P20`)
+- **Rota Frontend**: `/comunidade/amigos` (Stitch `rede_de_amigos.html` — `f30b49e5ac5b47f793be5f623ad26d43`).
+- **Operações BFF**: `GET /backend/comunidade/amizade/pesquisa`, `POST /backend/comunidade/amizade/:id/{aceitar,recusar,cancelar,remover}`.
 - **Layout e Componentes**:
-  - **Aba `Meus Amigos`**: Lista de amigos ativos com atalho `Ver Perfil` e botão `Remover Amigo` (com modal de confirmação avisando que a remoção é **bilateral** — apaga o vínculo dos dois lados).
-  - **Aba `Solicitações Recebidas`**: Lista de solicitações `PENDENTE` recebidas com botões `Aceitar` e `Recusar`.
-  - **Aba `Solicitações Enviadas`**: Lista de solicitações `PENDENTE` enviadas com botão `Cancelar Solicitação`.
-- **Validações, Erros e Estados**:
-  - Tentativa de aceitar/cancelar solicitação de terceiros ou remover usuário não amigo retorna erro de autorização/negócio via `publicar('erro', ...)`.
-  - **Vazio**: Mensagens distintas para zero amigos, zero solicitações recebidas e zero solicitações enviadas.
+  - Barra de filtros em pílulas (`Meus Amigos (N)`, `Solicitações Recebidas (N)`, `Solicitações Enviadas (N)`), filtro por `@apelido` e seletor de ordenação.
+  - Grid `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6` de cards `rounded-2xl bg-pure-white p-5 shadow-sm`:
+    - **Meus Amigos**: Avatar, `@apelido`, selo `verified`, botão `Ver Perfil` (`bg-ocean-blue text-pure-white`) e ícone `person_remove` (`hover:bg-error-container/30 hover:text-error`) abrindo modal de confirmação de **remoção bilateral** (apaga vínculo dos dois lados).
+    - **Recebidas**: Botões `Aceitar` (`bg-ocean-blue text-pure-white`) e `Recusar` (ghost/outline).
+    - **Enviadas**: Status `Pendente` e botão `Cancelar Solicitação`.
+- **Estados**: Estados vazios distintos por sub-aba; erros de autorização (ex.: aceitar/cancelar solicitação de terceiro) exibidos em `bg-error-container`.
 
 ---
 
-## 3. Protótipos de Alta Fidelidade — `comunidade / F002`: Decks Favoritos
+## 4. Protótipos de Alta Fidelidade — `comunidade / F002`: Decks Favoritos
 
 ### Protótipo 6 — Perfil com Decks e Wishlist (`P06`)
-- **Rota D5**: `/comunidade/perfil-comunitario/visualizacao` (e `/comunidade/perfil-comunitario/:id/visualizacao`).
-- **Layout e Componentes**:
-  - Visão integrada do perfil exibindo: barra comunitária (`Meu Perfil`, `Decks Favoritos`, `Minha Coleção`, `Rede de Amigos`, `Buscar Colecionadores`, `Abertura Preferida`), card do perfil, grid de `Cartas Favoritas` e, na base em 2 colunas, `Decks Favoritos` (esquerda) e `Wishlist Pública` (direita com link tokenizado `tcghub.com/w/...`, botão `Copiar` e atalho `Gerenciar Lista Completa na Wishlist →`).
-- **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy`)**: Se `exibirDecksFavoritos` estiver desmarcado, visitantes não visualizam o card de `Decks Favoritos` (exibido apenas ao proprietário com badge informativo `Oculto no perfil público`).
+- **Rota Frontend**: `/comunidade/perfil` e `/comunidade/perfil/:id` (Stitch `a778927205374bb68481d5bb1f1dc11d` / `9b383bb48db94fe485d3e71979323c57`).
+- **Layout**: Abaixo de `Cartas Favoritas`, grid de 2 colunas: esquerda `Decks Favoritos` (até 4 decks no formato oficial `1 Líder + 50 Cartas`) e direita `Wishlist Pública` (link tokenizado `tcghub.com/w/...` + botão `Copiar`).
+- **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy`)**: Quando `decksFavoritosVisiveis == false`, visitantes não veem o bloco de decks favoritos no perfil público; o proprietário continua vendo com selo `Oculto no perfil público`.
 
 ### Protótipo 7 — Lista de Decks Favoritos (`P07`)
-- **Rota D5**: `/comunidade/deck-favorito/pesquisa` e `/comunidade/deck-favorito/:id/exclusao`.
+- **Rota Frontend**: `/comunidade/decks-favoritos`.
 - **Operações BFF**: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST /backend/comunidade/deck-favorito/:id/excluir`, `POST /backend/comunidade/deck-favorito/ocultar`, `POST /backend/comunidade/deck-favorito/reexibir`.
-- **Layout e Componentes**:
-  - Cabeçalho `Decks Favoritos`, badge `X/4 decks favoritos`, texto `"Formato Oficial: 1 Líder + 50 Cartas"`, controle de visibilidade (`Exibir no Perfil Público` / `Ocultar` / `Reexibir`) e botão `+ Adicionar deck favorito` (desabilitado quando `4/4`).
-  - Cards horizontais para cada deck salvo: miniatura do líder, nome do deck (`Straw Hat Aggro Red`), badge `50 + 1`, subtítulo `Líder: Monkey D. Luffy (OP01-001)`, valor estimado (`R$ 890,00 • Base do Mercado`), botão `Visualizar deck` e botão `Remover` (somente proprietário).
-  - Rodapé informativo com link de importação/apoio.
-- **Estados**:
-  - **Vazio**: `"Você ainda não adicionou decks favoritos. Adicione até 4 decks do Catálogo."`
-  - **Deck Inativado no Catálogo**: Deck já favoritado permanece visível na lista com badge `Inativo no Catálogo`, preservando consulta/remoção pelo dono.
-  - **Erro**: Remover deck inexistente/não favoritado ou ação de outro usuário dispara `publicar('erro', ...)`.
+- **Layout**: Cabeçalho com badge `X/4 decks favoritos`, toggle `Exibir no Perfil Público` (`ocultar`/`reexibir`) e botão `+ Adicionar deck favorito` (desabilitado em `4/4`). Lista com miniatura do líder, nome do deck, badge `50 + 1`, `Líder: ...`, custo em `tabular-price`, botão `Visualizar deck` e botão `Remover`.
+- **Estados**: Deck tornado `INATIVO` no Catálogo após favoritado permanece visível para quem já o favoritou com badge `Inativo no Catálogo`; estado vazio orienta inclusão de até 4 decks.
 
 ### Protótipo 8 — Adicionar Deck Favorito (`P08`)
-- **Rota D5**: `/comunidade/deck-favorito/inclusao` (Modal sobre a lista/perfil).
+- **Rota Frontend**: Modal `Adicionar Deck Favorito` acionado em `/comunidade/decks-favoritos`.
 - **Operações BFF**: `GET /backend/comunidade/deck-favorito/inclusao` e `POST /backend/comunidade/deck-favorito/incluir`.
-- **Layout e Componentes**:
-  - `Modal` título `Adicionar Deck Favorito`, subtítulo `"Pesquise no catálogo oficial e fixe em seus decks favoritos"`.
-  - Banner informativo: `"Limite oficial: máximo de 4 decks favoritos."` + contador `X de 4 slots ocupados`.
-  - Campo de busca: `"Buscar deck por nome, líder ou código..."`.
-  - Lista de decks **ativos** consultados via `CatalogoDeckProxy`: cada item exibe imagem, nome, `Líder: ...`, valor estimado e botão `✓ Adicionado` (desabilitado se já nos favoritos) ou `+ Adicionar`.
-  - Rodapé: `"Formato: 1 Líder + 50 Cartas"` e botão `Cancelar`.
-- **Validações, Erros e Proxy (`CatalogoDeckProxy`)**:
-  - Rejeita inclusão se: limite de 4 atingido, deck duplicado, deck inativo ou deck inexistente.
-  - Se a SPI do Catálogo estiver indisponível, exibe alerta amigável `"Serviço de Catálogo temporariamente indisponível. Tente novamente em instantes."` com ação de tentar novamente.
+- **Layout**: Banner `"Limite oficial: máximo de 4 decks favoritos • X de 4 slots ocupados"`, campo de busca `"Buscar deck por nome, líder ou código..."`, lista de decks **ativos** via `CatalogoDeckProxy` com `✓ Adicionado` (desabilitado) ou `+ Adicionar`, e rodapé `"Formato: 1 Líder + 50 Cartas"` + `Cancelar`.
+- **Erros e Proxy (`CatalogoDeckProxy`)**: Rejeita 5º deck, duplicata, deck inativo ou inexistente; se a SPI do Catálogo estiver indisponível, exibe banner de indisponibilidade sem quebrar a tela.
 
 ### Protótipo 9 — Composição do Deck Favorito (`P09`)
-- **Rota D5**: `/comunidade/deck-favorito/:id/visualizacao` (Modal amplo de inspeção).
+- **Rota Frontend**: Modal amplo `Composição do Deck` (Stitch `d26c9d5f978f422fa021153ec9cfe885`).
 - **Operações BFF**: `GET /backend/comunidade/deck-favorito/:id/visualizacao`.
-- **Layout e Componentes**:
-  - Cabeçalho: Nome do deck (`Straw Hat Aggro Red`), `Líder: Monkey D. Luffy (OP01-001)`, badge `51 cartas (1 Líder + 50 Cartas)`, metadados e botão fechar (`×`).
-  - Barra de resumo: pílulas `1 Líder`, `32 Personagens`, `12 Eventos`, `6 Estágios` e à direita `Custo Estimado no Mercado: R$ 890,00`.
-  - Subtítulo `COMPOSIÇÃO DETALHADA E AGRUPADA (X ENTRADAS DE CATÁLOGO)` + selo `Conformidade Estrita (Máx 4 cópias)`.
-  - Lista de cartas obtida via `CatalogoDeckProxy`: imagem/ícone de tipo, badge de raridade + código + categoria, nome, nota comunitária, custo/poder, badge de quantidade (`x1 Líder`, `x4 no Deck`), preço unitário (`R$ 145,00 preço unitário`) e botão `Ver no Catálogo →` (navega para a página da carta no catálogo).
-  - Rodapé: `"Deck válido de 50 cartas • Estrutura 100% legalizada para torneios oficiais Bandai TCG."`, botões `Fechar` e `Copiar Decklist`.
-- **Estados e Proxy (`CatalogoDeckProxy`)**:
-  - **Carregamento**: Spinner/skeleton durante chamada ao Proxy do Catálogo.
-  - **Indisponibilidade do Catálogo**: Mensagem explícita `"Não foi possível carregar a composição porque o serviço de Catálogo está indisponível."` sem quebrar a tela (`ErroRota` ou estado de erro tratável dentro do modal).
+- **Layout**: Cabeçalho com nome do deck, líder, badge `51 cartas (1 Líder + 50 Cartas)`, pílulas `1 Líder`, `Personagens`, `Eventos`, `Estágios`, `Custo Estimado no Mercado` em `tabular-price`, lista agrupada com quantidade (`x1 Líder`, `x4 no Deck`), preço unitário, link `Ver no Catálogo →` e rodapé com `Fechar` e `Copiar Decklist`.
+- **Proxy (`CatalogoDeckProxy`)**: Carrega via SPI do Catálogo sem acessar banco de `loja`; exibe fallback tratável quando o serviço de Catálogo estiver indisponível.
 
 ---
 
-## 4. Protótipos de Alta Fidelidade — `comunidade / F003`: Avaliação de Cartas
+## 5. Protótipos de Alta Fidelidade — `comunidade / F003`: Avaliação de Cartas
 
 ### Protótipo 10 — Coleção Pessoal como Entrada da Avaliação (`P10`)
-- **Contexto / Papel**: Tela de apoio de `Minha Coleção` (domínio de apoio / entrada de navegação) integrando atalhos para `Avaliação de cartas`.
-- **Layout e Componentes**:
-  - Cabeçalho `Cards Recentes no Binder` + `X Cards Registrados`.
-  - Grid de cartas da coleção pessoal exibindo imagem, badges de raridade/condição, código + cor, nome, média comunitária (`★ 4.9 (42)` ou `☆ Sem avaliações`), controle de quantidade (`- 1 +`) e ação contextual de avaliação:
-    - Se usuário já avaliou: badge `(Sua: 5.0)` + ícone de edição que abre `/comunidade/avaliacao-produto/:id/alteracao` (Protótipo 14).
-    - Se usuário ainda não avaliou (e elegível via `CompraVerificada`): link/botão `Avaliar` que abre `/comunidade/avaliacao-produto/inclusao` (Protótipo 13).
+- **Rota Frontend**: `/minha-colecao` (entrada de apoio — Stitch `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090`).
+- **Layout**: Cards da coleção exibindo nota comunitária (`4.9 (42)` ou `Sem avaliações`), badge `(Sua: 5.0)` + ícone editar (abre `P14`) ou atalho `Avaliar` (abre `P13`).
 
 ### Protótipo 11 — Detalhes da Carta e Avaliações (`P11`)
-- **Contexto / Papel**: Página de produto no Catálogo com seção integrada de `Avaliações da Comunidade` (`/comunidade/avaliacao-produto/pesquisa?produtoId=...`).
-- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/pesquisa`.
-- **Layout e Componentes**:
-  - Bloco superior do produto (imagem da carta, código, nome, tipo, cor, poder, vida/custo, preço, estoque, ações comerciais da loja e gráfico `Histórico de Mercado`).
-  - Bloco inferior `Avaliações da Comunidade` (detalhado no Protótipo 12) com botão primário `Avaliar Carta` (ou `Editar Minha Avaliação`).
+- **Rota Frontend**: `/catalogo/cartas/:id` (entrada de apoio — Stitch `21c3501f0e844d2388377f55414687b4`).
+- **Layout**: Ficha da carta (especificações, preço, estoque, gráfico de mercado) conectada ao bloco inferior `Avaliações da Comunidade` (`P12`) com botão `Avaliar Carta` / `Editar Minha Avaliação`.
 
 ### Protótipo 12 — Avaliações da Comunidade (`P12`)
-- **Rota D5**: `/comunidade/avaliacao-produto/pesquisa` (integrada na página da carta).
-- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/pesquisa`.
-- **Layout e Componentes**:
-  - Cabeçalho `Avaliações da Comunidade` (`"Opiniões de colecionadores e avaliações registradas no catálogo da rede"`) + botão `Avaliar Carta`.
-  - Card de resumo à esquerda: nota média em destaque (`4.9` ou `0.0`), 5 estrelas visuais, `"Baseado em X avaliações válidas"` e, caso o usuário já tenha avaliado, `"• Sua nota: 5.0"` + link `Editar Minha Avaliação`.
-  - Histograma à direita: barras `ProgressBar` para `5 ★`, `4 ★`, `3 ★`, `2 ★`, `1 ★` com contagens absolutas.
-  - Lista de avaliações válidas: apelido do avaliador + selo obrigatório **`✓ Compra Verificada`**, data relativa (`Há 2 dias`), estrelas atribuídas e comentário textual.
-- **Estados**:
-  - **Vazio (0 avaliações)**: Exibe média `0.0`, `0 avaliações válidas`, barras zeradas e texto `"Esta carta ainda não possui avaliações da comunidade."`
-  - **Invalidação por Reembolso**: Avaliações cujo único pedido elegível foi reembolsado desaparecem da lista pública e a média/contagem é recalculada automaticamente.
+- **Rota Frontend**: Seção integrada em `/catalogo/cartas/:id`.
+- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/pesquisa?produtoId=...`.
+- **Layout**: Card esquerdo com média em destaque (`4.9` ou `0.0`), 5 estrelas e total de avaliações válidas; histograma `5★` a `1★` à direita; lista de comentários com selo obrigatório **`Compra Verificada`** (`bg-status-positive-bg text-status-positive-text`), data e nota.
+- **Regras**: Avaliações cujo único pedido elegível foi reembolsado deixam de constar na média e na lista automaticamente.
 
 ### Protótipo 13 — Nova Avaliação (`P13`)
-- **Rota D5**: `/comunidade/avaliacao-produto/inclusao` (Modal sobre Coleção ou Catálogo).
+- **Rota Frontend**: Modal `Avaliar Carta` (Stitch `c10dd91737b54bf49b75fb52fefae957`).
 - **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/inclusao` e `POST /backend/comunidade/avaliacao-produto/incluir`.
-- **Layout e Campos (`React Hook Form` + `Modal`)**:
-  - Cabeçalho `Avaliar Carta` + badge de tipo (`LÍDER`).
-  - Card resumo da carta (`OP01-003 • Vermelho`, nome, preço médio, cópia em coleção) + card com média comunitária atual.
-  - Seletor interativo de **1 a 5 estrelas** (`"Sua Avaliação — Selecione uma nota de 1 a 5 estrelas"`).
-  - Campo opcional `Seu Comentário (opcional):` (`textarea`).
-  - Rodapé: `Cancelar` (mantém estado anterior sem salvar) e `Salvar Avaliação` (habilitado após escolher nota de 1 a 5).
-- **Validações e Proxy (`AvaliacaoElegibilidadeProxy`)**:
-  - Nota obrigatória entre `1` e `5` (`< 1` ou `> 5` rejeitados).
-  - Antes de abrir ou ao submeter, `AvaliacaoElegibilidadeProxy` valida `CompraVerificada`: usuários sem pedido, com pagamento pendente ou com único pedido reembolsado têm a avaliação bloqueada/rejeitada com mensagem clara (`"Apenas compradores com pedido pago e não reembolsado podem avaliar esta carta."`).
+- **Campos (`React Hook Form`)**: Seletor interativo de **1 a 5 estrelas** obrigatório (`1 <= nota <= 5`), campo opcional `Seu Comentário (opcional)`, botões `Cancelar` e `Salvar Avaliação`.
+- **Proxy (`AvaliacaoElegibilidadeProxy`)**: Valida `CompraVerificada` (ao menos um pedido pago e não reembolsado); bloqueia sem compra, pagamento pendente ou único pedido reembolsado.
 
 ### Protótipo 14 — Atualização da Avaliação (`P14`)
-- **Rota D5**: `/comunidade/avaliacao-produto/:id/alteracao` (Modal sobre Coleção ou Catálogo).
+- **Rota Frontend**: Modal `Sua Avaliação da Carta` (Stitch `233e6f9b6f424215954a85c92d59f53e`).
 - **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/:id/alteracao` e `POST /backend/comunidade/avaliacao-produto/:id/alterar`.
-- **Layout e Campos (`React Hook Form` + `Modal`)**:
-  - Cabeçalho `Sua Avaliação da Carta` + resumo da carta e da comunidade.
-  - Indicador `✓ Avaliação Enviada` + nota atual (`5.0 ★`) + data (`Avaliado em DD/MM/AAAA`).
-  - Estrelas interativas preenchidas com legenda dinâmica (ex.: `Excelente - 5.0 estrelas`) e instrução `"Clique nas estrelas acima caso queira alterar a sua nota."`
-  - Campo `Seu Comentário:` marcado como `Editável`.
-  - Rodapé: `Cancelar` (preserva versão anterior) e `Atualizar Avaliação`.
-- **Validações e Proxy (`AvaliacaoElegibilidadeProxy`)**:
-  - Reavaliar atualiza o mesmo registro sem duplicar a contagem na média.
-  - Impede edição de avaliação de outro usuário (`403` via Proxy) e impede atualização caso todas as compras tenham sido reembolsadas.
+- **Layout e Regras**: Exibe nota atual (`Avaliação Enviada 5.0 ★`), data, estrelas editáveis, comentário editável, `Cancelar` (preserva versão anterior) e `Atualizar Avaliação`. Atualiza de forma idempotente sem duplicar contagem na média; `AvaliacaoElegibilidadeProxy` impede edição por outro usuário (`403`).
 
 ---
 
-## 5. Protótipos de Alta Fidelidade — `adm / F001` e `comunidade / F004`: Abertura Preferida de One Piece
+## 6. Protótipos de Alta Fidelidade — `adm / F001` e `comunidade / F004`: Abertura Preferida de One Piece
 
 ### Protótipo 15 — Gestão Administrativa das Aberturas (`P15`)
-- **Rota D5**: `/adm/abertura/pesquisa` (e ações `:id/visualizacao`, `:id/exclusao`, `inativar`, `reativar`).
-- **Operações BFF**: `GET /backend/adm/abertura/pesquisa`, `POST /backend/adm/abertura/:id/inativar`, `POST /backend/adm/abertura/:id/reativar`, `POST /backend/adm/abertura/:id/excluir`.
-- **Layout e Componentes (`TCGHub Admin`)**:
-  - Menu/item exibido somente quando `autorizacoesDe('abertura')` possui autorização `ADMINISTRADOR`.
-  - Breadcrumb `Início > Mídia & Catálogo > Aberturas de One Piece`, título `Aberturas`, subtítulo `"Gerenciamento do catálogo oficial de temas musicais de One Piece"`, botão primário `+ Cadastrar abertura`.
-  - Pílulas de filtro com contagem: `Todas (N)`, `Ativas (N)`, `Inativas (N)` + barra de busca `"Buscar por número ou nome (ex: Hope, 20)..."`.
-  - Tabela (`Table`) com colunas: `MÍDIA` (miniatura 16:9), `Nº` (`#01`), `NOME DA ABERTURA`, `ARTISTA`, `EPISÓDIOS`, `PREFERÊNCIAS` (coração + total de escolhas na comunidade), `STATUS` (`• Ativa` / `• Inativa`), `AÇÕES` (ícones: Visualizar `/adm/abertura/:id/visualizacao`, Editar `/adm/abertura/:id/alteracao`, Inativar/Reativar e menu `⋮` com Excluir `/adm/abertura/:id/exclusao`).
-  - Paginação inferior (`Exibindo 1-5 de N aberturas`).
-- **Estados e Regras**:
-  - **Vazio**: `"Nenhuma abertura encontrada para os filtros selecionados."`
-  - **Regra de exclusão**: A ação `Excluir` é bloqueada pelo backend quando `preferencias > 0`, exibindo via `publicar('erro', ...)` a mensagem `"A abertura já foi escolhida por usuários e só pode ser inativada."`
-  - **Autorização**: Usuários sem papel `ADMINISTRADOR` recebem rejeição de autorização em qualquer rota/ação de `adm/abertura`.
+- **Rota Frontend**: `/adm/aberturas` (Stitch `b2a45fd86fd84870b32e71fbd1c43fc4`).
+- **Operações BFF**: `GET /backend/adm/abertura/pesquisa`, `POST /backend/adm/abertura/:id/{inativar,reativar,excluir}`.
+- **Layout**: Visível apenas para `ADMINISTRADOR`; breadcrumb `Início > Mídia & Catálogo > Aberturas de One Piece`, botão `+ Cadastrar abertura`, pílulas `Todas (N)`, `Ativas (N)`, `Inativas (N)`, busca por número/nome, tabela com cabeçalho `bg-deep-navy text-pure-white` (`MÍDIA`, `Nº`, `NOME DA ABERTURA`, `ARTISTA`, `EPISÓDIOS`, `PREFERÊNCIAS`, `STATUS`, `AÇÕES`) e paginação.
+- **Regras**: Rejeita exclusão física quando `preferencias > 0`, orientando o uso de `Inativar`.
 
 ### Protótipo 16 — Cadastro Administrativo de Abertura (`P16`)
-- **Rota D5**: `/adm/abertura/inclusao` e `/adm/abertura/:id/alteracao` (Modal ou página de formulário).
-- **Operações BFF**: `GET /backend/adm/abertura/inclusao` / `POST /backend/adm/abertura/incluir`; `GET /backend/adm/abertura/:id/alteracao` / `POST /backend/adm/abertura/:id/alterar`.
-- **Layout e Campos (`React Hook Form` + `Modal`)**:
-  - Cabeçalho `Cadastrar abertura` (`"Adicione uma nova música tema à base canônica"`) ou `Editar abertura`.
-  - `Número da Abertura *` (`number > 0`, único).
-  - `Nome da Abertura *` (texto obrigatório, ex.: `Us!`).
-  - `Artista / Intérprete *` (texto obrigatório, ex.: `Hiroshi Kitadani`).
-  - `Ep. Inicial *` e `Ep. Final *` (compõem `episódios`, ex.: `1 a 47` ou `1120 - Atual`).
-  - `URL da Imagem de Capa (Aspecto 16:9)` + botão `Testar` + caixa de pré-visualização `"Prévia da imagem aparecerá aqui"`.
-  - `Referência de Vídeo Público (YouTube / URL)`.
-  - Checkbox `Ativa para novas escolhas` (`"Usuários do TCGHub poderão selecionar este tema musical em seu perfil imediatamente."`).
-  - Rodapé: `Cancelar` e `Cadastrar abertura` (ou `Salvar alterações`).
-- **Validações e Erros**:
-  - Número `<= 0` ou campos obrigatórios vazios → validação em linha e rejeição no domínio.
-  - Número já existente em outra abertura (na inclusão ou na alteração) → `publicar('erro', 'Já existe uma abertura com o número X.')`.
-  - Teste de imagem com URL quebrada exibe fallback de erro na caixa de prévia.
+- **Rota Frontend**: Modal em `/adm/aberturas`.
+- **Operações BFF**: `GET/POST /backend/adm/abertura/{inclusao,incluir,:id/alteracao,:id/alterar}`.
+- **Campos (`React Hook Form`)**: `Número da Abertura *` (`> 0`, único), `Nome da Abertura *`, `Artista / Intérprete *`, `Ep. Inicial *`, `Ep. Final *`, `URL da Imagem de Capa (Aspecto 16:9)` + botão `Testar` + caixa de prévia, `Referência de Vídeo Público (YouTube / URL)`, checkbox `Ativa para novas escolhas`, botões `Cancelar` e `Cadastrar abertura`.
 
 ### Protótipo 17 — Catálogo e Ranking de Aberturas (`P17`)
-- **Rota D5**: `/comunidade/abertura-preferida/pesquisa`, `/comunidade/abertura-preferida/inclusao` e `/comunidade/abertura-preferida/ranking`.
-- **Operações BFF**: `GET /backend/comunidade/abertura-preferida/pesquisa`, `GET /backend/comunidade/abertura-preferida/ranking`, `POST /backend/comunidade/abertura-preferida/incluir`, `POST /backend/comunidade/abertura-preferida/ocultar`, `POST /backend/comunidade/abertura-preferida/reexibir`.
-- **Layout e Componentes**:
-  - **Banner Superior da Escolha Atual**: Miniatura, badge `ABERTURA ESCOLHIDA` + `X amigos também escolheram`, título `Op. 01 — We Are!`, artista + episódios, botão `Ver Detalhes` e switch `Exibir no Perfil Público` (`"Visível para outros nakamas"` / `"Oculta no perfil público"`). Se nenhuma escolhida ainda, exibe convite `"Escolha sua abertura preferida abaixo"`.
-  - **Área Principal (Esquerda)**: Busca `"Filtrar por nome, número de abertura ou artista..."`, pílulas de filtro (`Todas as Aberturas`, `Escolhidas por Amigos`, `Top Ranking`), grid de cards apenas com aberturas **`ATIVAS`** exibindo: capa 16:9, badge `★ SUA PREFERIDA` ou `#N NO RANKING`, badge `Op. XX`, título, artista • episódios, total de votos e **contagem de amigos** (`X amigos`), botão `✓ Ativa no Perfil` ou `Definir como Preferida` + ícone de olho para alternar visibilidade.
-  - **Sidebar Direita (`RANKING DA COMUNIDADE — Top 5 Escolhas Oficiais`)**: Card `Total de Votos Ativos`, lista ordenada `#1` a `#5` com barra proporcional (`ProgressBar`), percentual (ex.: `33,3%`) e votos, mais nota de rodapé de privacidade: `"Preferências com privacidade restrita somam no cálculo proporcional sem expor o usuário."`
-- **Estados e Proxy (`AberturaPreferidaPrivacidadeProxy`)**:
-  - **Ranking Vazio**: Exibe `Total de Votos Ativos: 0` e estado `"Nenhuma escolha registrada na comunidade ainda."`
-  - **Abertura Inativa**: Aberturas inativadas no `adm` **não** aparecem na listagem para novas escolhas. Se a abertura atual do usuário tiver sido inativada, ela permanece visível no banner superior até que ele escolha outra abertura ativa.
-  - **Privacidade**: Escolhas ocultas continuam contabilizadas no Top 5 sem revelar nomes no perfil público ou na correspondência entre amigos.
+- **Rota Frontend**: `/comunidade/abertura-preferida` (Stitch `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d`).
+- **Operações BFF**: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking}`, `POST /backend/comunidade/abertura-preferida/{incluir,ocultar,reexibir}`.
+- **Layout**:
+  - **Banner Superior**: Abertura atualmente escolhida (`Op. 01 — We Are!`), contagem de amigos, botão `Ver Detalhes` e switch `Exibir no Perfil Público`.
+  - **Catálogo Ativo (Esquerda)**: Busca por nome, número ou artista; pílulas `Todas as Aberturas`, `Escolhidas por Amigos`, `Top Ranking`; grid apenas com aberturas **`ATIVAS`**, mostrando capa 16:9, votos, amigos, botão `Definir como Preferida` / `✓ Ativa no Perfil` e ícone de privacidade.
+  - **Sidebar Direita (`RANKING DA COMUNIDADE — Top 5 Escolhas Oficiais`)**: `Total de Votos Ativos`, barras proporcionais `#1`–`#5` com percentual e contagem, e aviso de que escolhas ocultas somam no cálculo sem expor o usuário (`AberturaPreferidaPrivacidadeProxy`).
 
 ### Protótipo 18 — Detalhes da Abertura Preferida (`P18`)
-- **Rota D5**: `/comunidade/abertura-preferida/:id/visualizacao`.
+- **Rota Frontend**: `/comunidade/abertura-preferida/:id` (Stitch `eb3be1f6e46e4ad8ae22f2fb8b39731e`).
 - **Operações BFF**: `GET /backend/comunidade/abertura-preferida/:id/visualizacao`.
-- **Layout e Componentes**:
-  - Mesmo banner superior com toggle `Exibir no Perfil Público`, link `← Voltar para Catálogo de Aberturas` e tag `Reprodução Oficial • Modo Foco`.
-  - **Hero Banner**: Capa em destaque com overlay escuro, badges `OP. 01` e arco/episódios, título (`We Are!`), artista e episódios (`Hiroshi Kitadani • Episódios 001 a 047`), botão `▶ Assistir Abertura` (reproduz vídeo oficial) e botão `☆ Sua Preferida (Ativa)` (ou `Definir como Preferida`).
-  - **3 Cards Informativos Inferiores**:
-    1. `Amigos que Escolheram`: Total (`X Amigos`) + apelidos dos amigos cuja visibilidade é pública (filtrados pelo `AberturaPreferidaPrivacidadeProxy`).
-    2. `Posição Global`: `#N no Ranking Oficial` + votos ativos e percentual.
-    3. `Cronologia do Anime`: Quantidade/faixa de episódios.
-- **Estados e Erros**:
-  - `:id` inexistente aciona `ErroRota` (`404`).
-  - Amigos com escolha oculta não aparecem na lista nominal de correspondência.
+- **Layout**: Hero cinematográfico com capa, número, arco/episódios, artista, botão `▶ Assistir Abertura`, botão `☆ Sua Preferida (Ativa)` e 3 cards inferiores (`Amigos que Escolheram` filtrado pelo `AberturaPreferidaPrivacidadeProxy`, `Posição Global` no ranking e `Cronologia do Anime`).
 
 ---
 
-## 6. Matriz de Rastreabilidade (Protótipos ↔ Especificações `RN00X` ↔ Cenários BDD)
+## 7. Matriz de Rastreabilidade (Protótipos ↔ Especificações `RN00X` ↔ Cenários BDD)
 
-| Protótipo | Funcionalidade / Subdomínio | Rota(s) D5 Principal(is) | Regras de Negócio (`tcghub/docs/.../funcionalidades/`) | Cenários BDD (`.feature`) Relacionados |
+| Protótipo | Funcionalidade / Subdomínio | Rota Frontend (`/frontend`) | Regras de Negócio (`tcghub/docs/.../funcionalidades/`) | Cenários BDD (`.feature`) Relacionados |
 | :--- | :--- | :--- | :--- | :--- |
-| **P01** — Visão geral do perfil | `comunidade / F001` | `/comunidade/perfil-comunitario/visualizacao`, `:id/visualizacao` | `comunidade/F001`: `RN001`, `RN002`, `RN003` | `perfil-e-amigos.feature`: Consultar próprio perfil, Consultar perfil público, Rejeitar perfil inexistente |
-| **P02** — Edição do perfil | `comunidade / F001` | `/comunidade/perfil-comunitario/:id/alteracao` | `comunidade/F001`: `RN001`, `RN002` | `perfil-e-amigos.feature`: Editar dados, Cancelar edição, Manter próprio apelido, Rejeitar apelido duplicado (inclusive *case-insensitive*), Rejeitar apelido vazio, Rejeitar edição de outro usuário |
-| **P03** — Cartas favoritas preenchidas | `comunidade / F001` | `/comunidade/perfil-comunitario/visualizacao` | `comunidade/F001`: `RN002`, `RN003` | `perfil-e-amigos.feature`: Não fixar mais de 4 cartas, Remover carta dos destaques |
-| **P04** — Espaço disponível nas cartas favoritas | `comunidade / F001` | `/comunidade/perfil-comunitario/visualizacao` | `comunidade/F001`: `RN003` | `perfil-e-amigos.feature`: Remover carta libera espaço para fixar outra |
-| **P05** — Seleção de carta favorita | `comunidade / F001` | Modal em `/comunidade/perfil-comunitario/visualizacao` | `comunidade/F001`: `RN002`, `RN003` | `perfil-e-amigos.feature`: Fixar carta da coleção, Rejeitar >4 ou duplicata |
-| **P19** — Buscar colecionadores e solicitar amizade | `comunidade / F001` | `/comunidade/amizade/pesquisa`, `/comunidade/amizade/inclusao` | `comunidade/F001`: `RN004` | `perfil-e-amigos.feature`: Enviar solicitação, Rejeitar autoamizade, Rejeitar inexistente, Rejeitar solicitação duplicada, Rejeitar amizade já ativa |
-| **P20** — Rede de amigos e solicitações pendentes | `comunidade / F001` | `/comunidade/amizade/pesquisa`, `:id/visualizacao` | `comunidade/F001`: `RN005`, `RN006` | `perfil-e-amigos.feature`: Aceitar solicitação (bilateral), Rejeitar aceitação por terceiro, Recusar, Cancelar, Rejeitar cancelamento por terceiro, Remover bilateralmente, Rejeitar remoção de não amigo |
-| **P06** — Perfil com decks e wishlist | `comunidade / F001` + `F002` | `/comunidade/perfil-comunitario/visualizacao` | `comunidade/F001`: `RN002`; `comunidade/F002`: `RN001`, `RN003`, `RN004` | `decks-favoritos.feature`: Ocultar e reexibir decks favoritos no perfil público |
-| **P07** — Lista de decks favoritos | `comunidade / F002` | `/comunidade/deck-favorito/pesquisa`, `:id/exclusao` | `comunidade/F002`: `RN001`, `RN002`, `RN004`, `RN005` | `decks-favoritos.feature`: Remover deck libera vaga, Rejeitar remoção de não favorito, Preservar deck tornado inativo, Ocultar/reexibir, Rejeitar gestão de outro usuário |
-| **P08** — Adicionar deck favorito | `comunidade / F002` | `/comunidade/deck-favorito/inclusao` | `comunidade/F002`: `RN001`, `RN002`, `RN005` | `decks-favoritos.feature`: Pesquisar decks disponíveis, Adicionar até 4, Rejeitar 5º deck, Rejeitar duplicata, Rejeitar deck inativo/inexistente |
-| **P09** — Composição do deck favorito | `comunidade / F002` | `/comunidade/deck-favorito/:id/visualizacao` | `comunidade/F002`: `RN003` | `decks-favoritos.feature`: Visualizar composição via interface do Catálogo, Tratar indisponibilidade do Catálogo |
-| **P10** — Coleção pessoal (entrada avaliação) | `comunidade / F003` *(apoio)* | Entrada para `/comunidade/avaliacao-produto/inclusao` / `:id/alteracao` | `comunidade/F003`: `RN001`, `RN002` | `avaliacao-de-cartas.feature`: Registrar avaliação, Reavaliar carta existente |
-| **P11** — Detalhes da carta e avaliações | `comunidade / F003` *(apoio)* | Entrada para `/comunidade/avaliacao-produto/pesquisa` | `comunidade/F003`: `RN001`, `RN004`, `RN006` | `avaliacao-de-cartas.feature`: Consultar média e contagem no catálogo |
-| **P12** — Avaliações da comunidade | `comunidade / F003` | `/comunidade/avaliacao-produto/pesquisa` | `comunidade/F003`: `RN004`, `RN005`, `RN006` | `avaliacao-de-cartas.feature`: Média e contagem, Carta sem avaliações (`0.0`), Selo compra verificada, Invalidação e recálculo após reembolso |
-| **P13** — Nova avaliação | `comunidade / F003` | `/comunidade/avaliacao-produto/inclusao` | `comunidade/F003`: `RN001`, `RN003`, `RN006` | `avaliacao-de-cartas.feature`: Registrar avaliação (com/sem comentário, nota 1–5), Rejeitar sem compra/não pago/reembolsado, Permitir se houver outro pedido pago, Rejeitar nota `<1` ou `>5` |
-| **P14** — Atualização da avaliação | `comunidade / F003` | `/comunidade/avaliacao-produto/:id/alteracao` | `comunidade/F003`: `RN002`, `RN003`, `RN005` | `avaliacao-de-cartas.feature`: Reavaliar sem duplicar contagem, Cancelar edição preserva anterior, Rejeitar alteração de outro usuário, Manter válida se houver outra compra |
-| **P15** — Gestão administrativa das aberturas | `adm / F001` | `/adm/abertura/pesquisa`, `:id/visualizacao`, `:id/exclusao` | `adm/F001`: `RN001`, `RN002`, `RN004`, `RN005`, `RN006` | `abertura.feature`: Consultar por número, Pesquisar/filtrar por status, Inativar, Reativar, Excluir nunca escolhida, Rejeitar exclusão de já escolhida, Rejeitar sem autorização `ADMINISTRADOR` |
-| **P16** — Cadastro administrativo de abertura | `adm / F001` | `/adm/abertura/inclusao`, `/adm/abertura/:id/alteracao` | `adm/F001`: `RN001`, `RN002`, `RN003` | `abertura.feature`: Cadastrar ativa/inativa, Editar dados, Rejeitar sem autorização, Rejeitar número duplicado (cadastro/edição), Rejeitar dados inválidos, Rejeitar edição inexistente |
-| **P17** — Catálogo e ranking de aberturas | `comunidade / F004` | `/comunidade/abertura-preferida/pesquisa`, `inclusao`, `ranking` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca |
-| **P18** — Detalhes da abertura preferida | `comunidade / F004` | `/comunidade/abertura-preferida/:id/visualizacao` | `comunidade/F004`: `RN003`, `RN004`, `RN005` | `abertura-preferida.feature`: Consultar detalhes com posição e amigos, Indicar/não indicar/ocultar correspondência no perfil do amigo |
+| **P01** — Visão geral do perfil | `comunidade / F001` | `/comunidade/perfil`, `/comunidade/perfil/:id` | `comunidade/F001`: `RN001`, `RN002`, `RN003` | `perfil-e-amigos.feature`: Consultar próprio perfil, Consultar perfil público, Rejeitar perfil inexistente |
+| **P02** — Edição do perfil | `comunidade / F001` | Modal em `/comunidade/perfil` | `comunidade/F001`: `RN001`, `RN002` | `perfil-e-amigos.feature`: Editar dados, Cancelar edição, Manter próprio apelido, Rejeitar apelido duplicado (*case-insensitive*), Rejeitar apelido vazio, Rejeitar edição de outro usuário |
+| **P03** — Cartas favoritas preenchidas | `comunidade / F001` | `/comunidade/perfil` | `comunidade/F001`: `RN002`, `RN003` | `perfil-e-amigos.feature`: Não fixar mais de 4 cartas, Remover carta dos destaques |
+| **P04** — Espaço disponível nas cartas favoritas | `comunidade / F001` | `/comunidade/perfil` | `comunidade/F001`: `RN003` | `perfil-e-amigos.feature`: Remover carta libera espaço para fixar outra |
+| **P05** — Seleção de carta favorita | `comunidade / F001` | Modal em `/comunidade/perfil` | `comunidade/F001`: `RN002`, `RN003` | `perfil-e-amigos.feature`: Fixar carta da coleção, Rejeitar >4 ou duplicata |
+| **P19** — Buscar colecionadores e solicitar amizade | `comunidade / F001` | `/comunidade/colecionadores` | `comunidade/F001`: `RN004` | `perfil-e-amigos.feature`: Enviar solicitação, Rejeitar autoamizade, Rejeitar inexistente, Rejeitar solicitação duplicada, Rejeitar amizade já ativa |
+| **P20** — Rede de amigos e solicitações pendentes | `comunidade / F001` | `/comunidade/amigos` | `comunidade/F001`: `RN005`, `RN006` | `perfil-e-amigos.feature`: Aceitar solicitação (bilateral), Rejeitar aceitação por terceiro, Recusar, Cancelar, Rejeitar cancelamento por terceiro, Remover bilateralmente, Rejeitar remoção de não amigo |
+| **P06** — Perfil com decks e wishlist | `comunidade / F001` + `F002` | `/comunidade/perfil`, `/comunidade/perfil/:id` | `comunidade/F001`: `RN002`; `comunidade/F002`: `RN001`, `RN003`, `RN004` | `decks-favoritos.feature`: Ocultar e reexibir decks favoritos no perfil público |
+| **P07** — Lista de decks favoritos | `comunidade / F002` | `/comunidade/decks-favoritos` | `comunidade/F002`: `RN001`, `RN002`, `RN004`, `RN005` | `decks-favoritos.feature`: Remover deck libera vaga, Rejeitar remoção de não favorito, Preservar deck tornado inativo, Ocultar/reexibir, Rejeitar gestão de outro usuário |
+| **P08** — Adicionar deck favorito | `comunidade / F002` | Modal em `/comunidade/decks-favoritos` | `comunidade/F002`: `RN001`, `RN002`, `RN005` | `decks-favoritos.feature`: Pesquisar decks disponíveis, Adicionar até 4, Rejeitar 5º deck, Rejeitar duplicata, Rejeitar deck inativo/inexistente |
+| **P09** — Composição do deck favorito | `comunidade / F002` | Modal em `/comunidade/decks-favoritos` | `comunidade/F002`: `RN003` | `decks-favoritos.feature`: Visualizar composição via interface do Catálogo, Tratar indisponibilidade do Catálogo |
+| **P10** — Coleção pessoal (entrada avaliação) | `comunidade / F003` *(apoio)* | `/minha-colecao` | `comunidade/F003`: `RN001`, `RN002` | `avaliacao-de-cartas.feature`: Registrar avaliação, Reavaliar carta existente |
+| **P11** — Detalhes da carta e avaliações | `comunidade / F003` *(apoio)* | `/catalogo/cartas/:id` | `comunidade/F003`: `RN001`, `RN004`, `RN006` | `avaliacao-de-cartas.feature`: Consultar média e contagem no catálogo |
+| **P12** — Avaliações da comunidade | `comunidade / F003` | Seção em `/catalogo/cartas/:id` | `comunidade/F003`: `RN004`, `RN005`, `RN006` | `avaliacao-de-cartas.feature`: Média e contagem, Carta sem avaliações (`0.0`), Selo compra verificada, Invalidação e recálculo após reembolso |
+| **P13** — Nova avaliação | `comunidade / F003` | Modal em `/minha-colecao` / `/catalogo/cartas/:id` | `comunidade/F003`: `RN001`, `RN003`, `RN006` | `avaliacao-de-cartas.feature`: Registrar avaliação (com/sem comentário, nota 1–5), Rejeitar sem compra/não pago/reembolsado, Permitir se houver outro pedido pago, Rejeitar nota `<1` ou `>5` |
+| **P14** — Atualização da avaliação | `comunidade / F003` | Modal em `/minha-colecao` / `/catalogo/cartas/:id` | `comunidade/F003`: `RN002`, `RN003`, `RN005` | `avaliacao-de-cartas.feature`: Reavaliar sem duplicar contagem, Cancelar edição preserva anterior, Rejeitar alteração de outro usuário, Manter válida se houver outra compra |
+| **P15** — Gestão administrativa das aberturas | `adm / F001` | `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN004`, `RN005`, `RN006` | `abertura.feature`: Consultar por número, Pesquisar/filtrar por status, Inativar, Reativar, Excluir nunca escolhida, Rejeitar exclusão de já escolhida, Rejeitar sem autorização `ADMINISTRADOR` |
+| **P16** — Cadastro administrativo de abertura | `adm / F001` | Modal em `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN003` | `abertura.feature`: Cadastrar ativa/inativa, Editar dados, Rejeitar sem autorização, Rejeitar número duplicado (cadastro/edição), Rejeitar dados inválidos, Rejeitar edição inexistente |
+| **P17** — Catálogo e ranking de aberturas | `comunidade / F004` | `/comunidade/abertura-preferida` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca |
+| **P18** — Detalhes da abertura preferida | `comunidade / F004` | `/comunidade/abertura-preferida/:id` | `comunidade/F004`: `RN003`, `RN004`, `RN005` | `abertura-preferida.feature`: Consultar detalhes com posição e amigos, Indicar/não indicar/ocultar correspondência no perfil do amigo |

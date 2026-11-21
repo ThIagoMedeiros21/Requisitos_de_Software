@@ -160,3 +160,25 @@ Durante a execução da implementação (Etapa 3.1), o `@repo-guardian` consolid
 5. `feat(ui-backend): add REST BFF controllers, proxy bean wiring, and security config for F001` (`ui-backend`)
 6. `feat(ui-frontend): configure Tailwind and Zustand and implement F001 views and tests` (`ui-frontend`)
 7. `docs(reports): add Stage 3.1 implementation audit report and AI interaction log` (`docs/reports/`, `docs/ai-interactions/`)
+
+---
+
+## 6. Evolução Arquitetural — Frontend Standalone (`/frontend`) e Design System Stitch
+
+Para desacoplar integralmente a camada web do reator Maven (`tcghub/`) e alinhar a interface ao Design System oficial do projeto (**Nautical Blue & White Marketplace**, extraído do Stitch `projects/18247718655827442438`), a arquitetura frontend evolui de `tcghub/ui-frontend` para o projeto standalone **`/frontend/`** na raiz do repositório, **sem Bootstrap e sem Angular**:
+
+- **Localização e Build**: `/frontend/` (React `19.3.0`, Vite `8.3.0`, Tailwind CSS v4 via `@tailwindcss/vite`, TanStack Query `5.104.0`, React Router `8.5.0`, Zustand, React Hook Form `7.90.0`, Vitest + Testing Library), executado com `pnpm dev` na porta `4200` com proxy `/backend` → `http://localhost:8080`.
+- **Estrutura Feature-Based em `/frontend/src/`**:
+  - `styles/` (`tokens.css` com `:root` + `@theme` Tailwind v4 e `globals.css`)
+  - `lib/` (`api.ts` com `chamarApi`, `queryClient.ts`, utilitários de autenticação/erros)
+  - `stores/` (stores Zustand para estado efêmero de UI)
+  - `components/layout/` (`AppShell`, navegação, notificações, `ErroRota`, `RotaProtegida`)
+  - `features/auth/` e `features/community/` (componentes, hooks/queries, tipos e testes por funcionalidade)
+  - `routes/` (roteamento com `lazy` e `loader`)
+- **Rotas de Mercado (Frontend)** integradas aos endpoints BFF existentes em `ui-backend` (`/backend/autenticacao`, `/backend/comunidade/perfil-comunitario/...`, `/backend/comunidade/amizade/...`):
+  - `/login`
+  - `/comunidade/perfil`
+  - `/comunidade/perfil/:id`
+  - `/comunidade/amigos`
+  - `/comunidade/colecionadores`
+

@@ -20,13 +20,13 @@ Toda funcionalidade do sistema deve ser **completa** (operações de escrita, va
   1. **DDD Preliminar**: Linguagem Onipresente, Mapa de História do Usuário e Protótipos de Alta Fidelidade.
   2. **DDD Estratégico**: Subdomínios (`adm`, `comunidade`, `loja`, `compartilhado`) e relações `Downstream-Upstream` em grafo estritamente acíclico (`loja -> comunidade -> adm -> compartilhado`).
   3. **DDD Tático**: Agregados (`IAgregado`, exatamente 1 entidade raiz por agregado), Entidades, Objetos de Valor (`ObjetoValorStringAbstrato`, `ObjetoValorRegexAbstrato`, `IObjetoValor`), Serviços de Domínio (`AgregadoServicoAbstrato`) e SPIs de Repositório (`IAgregadoRepositorio`). **Proibido** modelo de domínio anêmico.
-  4. **DDD Operacional**: Persistência JPA/ORM, projeções **CQRS**, exposição **BFF** REST em `ui-backend`, apresentação web em `ui-frontend` e **programação defensiva** estrita (ver [programar-defensivamente](.agents/skills/programar-defensivamente/SKILL.md)).
+  4. **DDD Operacional**: Persistência JPA/ORM, projeções **CQRS**, exposição **BFF** REST em `ui-backend`, apresentação web em React (`../frontend/`) e **programação defensiva** estrita (ver [programar-defensivamente](.agents/skills/programar-defensivamente/SKILL.md)).
 - **Isolamento entre subdomínios**: um conceito pertence ao módulo de seu subdomínio; integrações intercontextos utilizam identificadores e contratos SPI (jamais acoplamento direto ao banco de outro subdomínio, e jamais dependências cíclicas).
 
 ## Tecnologias
 - **Linguagem / Backend**: Java 25, Spring Boot `4.1.1`, Framework D5 `1.0.0-SNAPSHOT`
 - **Persistência / Banco Relacional**: JPA / ORM com **PostgreSQL** (execução do ambiente em Docker) e **H2** (testes `@DataJpaTest`)
-- **Frontend**: React `19.3.0`, Vite `8.3.0`, Tailwind CSS (a adicionar em `ui-frontend/src/main/react/package.json` na implementação de UI), TanStack Query `5.104.0`, React Router `8.5.0`, Zustand (a adicionar em `ui-frontend/src/main/react/package.json` na implementação de UI), React Hook Form `7.90.0`, React Bootstrap `2.10.10`, Bootstrap `5.3.8`
+- **Frontend** (`../frontend/`, standalone e desacoplado do reator Maven): React `19.3.0`, Vite `8.3.0`, Tailwind CSS v4 (Design System *Nautical Blue & White Marketplace*, sem Bootstrap e sem Angular), TanStack Query `5.104.0`, React Router `8.5.0`, Zustand, React Hook Form `7.90.0`
 - **Modelagem**: Context Mapper `6.12.0` (`.cml`) e DBML `10.1.1` (`.dbml`)
 - **Qualidade e Testes**: Cucumber `7.34.8`, Mockito `5.23.0`, JSpecify `1.0` (`@NullMarked` obrigatório em todos os pacotes)
 
@@ -45,8 +45,7 @@ Toda funcionalidade do sistema deve ser **completa** (operações de escrita, va
 - `dominio-S` (entidades, objetos de valor, serviços e SPIs de um subdomínio **S**, por exemplo, interfaces de repositórios)
 - `aplicacao` (serviços de aplicação, projeções de entidades e SPIs da camada de aplicação, por exemplo, interfaces de repositórios de aplicação)
 - `infraestrutura` (implementações das SPIs)
-- `ui-backend` (controladores REST do backend para o frontend)
-- `ui-frontend` (aplicação React do frontend)
+- `ui-backend` (controladores REST do backend BFF para o frontend standalone em `../frontend/`)
 
 Um conceito que pertence a um subdomínio fica no módulo dele, mesmo que outros subdomínios o usem. Todo módulo `dominio-S` depende de `dominio-compartilhado` e pode depender também do módulo de outro subdomínio cujos conceitos ele referencia, desde que as dependências entre módulos de subdomínio não formem um ciclo.
 
@@ -110,9 +109,9 @@ Todos os pacotes são anotados com `@NullMarked`.
 ## Execução e Validação
 - **Ambiente padrão (Backend + PostgreSQL no Docker e Frontend local)**:
   - Subir `backend` (`:8080`) + `PostgreSQL` (`:5432`) via Docker (a partir da raiz `../`): `docker compose -f tcghub/compose.yaml up --build` (ou `docker compose -f compose.yaml up --build` dentro de `tcghub/`)
-  - Subir frontend (`:4200`, proxy `/backend` → `http://localhost:8080`) em `ui-frontend/src/main/react`: `pnpm dev`
-- **Alternativa D5 em memória (H2)**: `mvn spring-boot:test-run -pl ui-backend`
+  - Subir frontend (`:4200`, proxy `/backend` → `http://localhost:8080`) em `../frontend`: `pnpm dev`
+- **Alternativa backend em memória (H2)**: `mvn spring-boot:test-run -pl ui-backend`
 - **Compilação de testes Java**: `mvn test-compile`
 - **Suítes BDD / Cucumber**: `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja`
 - **Validação Context Mapper (`.cml`)**: `mvn -q exec:java -f .agents/skills/validar-modelo/scripts/pom.xml -Dexec.args="validate --input docs/<arquivo>.cml"`
-- **Testes e build Frontend** (em `ui-frontend/src/main/react`): `pnpm test` e `pnpm build`
+- **Testes e build Frontend** (em `../frontend`): `pnpm test` e `pnpm build`
