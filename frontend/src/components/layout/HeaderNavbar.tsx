@@ -46,7 +46,10 @@ export function HeaderNavbar() {
             </Link>
 
             {autenticado && (
-              <nav aria-label="Navegação principal" className="hidden items-center gap-space-sm lg:flex">
+              <nav
+                aria-label="Navegação principal"
+                className="hidden items-center gap-space-sm lg:flex"
+              >
                 <button
                   type="button"
                   onClick={() => publicar('info', 'Catálogo disponível em breve.')}
@@ -95,6 +98,23 @@ export function HeaderNavbar() {
               </nav>
             )}
           </div>
+
+          {!autenticado && (
+            <div className="flex flex-shrink-0 items-center gap-space-xs">
+              <Link
+                to="/login"
+                className="rounded-lg px-3.5 py-1.5 font-label-md text-label-md font-semibold text-secondary no-underline transition-colors hover:bg-surface-container-low hover:text-deep-navy"
+              >
+                Entrar
+              </Link>
+              <Link
+                to="/cadastro"
+                className="rounded-lg bg-ocean-blue px-3.5 py-1.5 font-label-md text-label-md font-semibold text-pure-white no-underline shadow-sm transition-colors hover:bg-deep-navy"
+              >
+                Criar Conta
+              </Link>
+            </div>
+          )}
 
           {autenticado && (
             <>

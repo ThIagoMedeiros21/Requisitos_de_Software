@@ -1,6 +1,6 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { redirect, type LoaderFunctionArgs } from 'react-router';
-import { chamarApi, ErroHttp } from '../../../lib/api';
+import { chamarApi, ErroHttp, mensagemErro } from '../../../lib/api';
 import { chaveAutenticacao, clienteConsultas } from '../../../lib/queryClient';
 
 export interface IAgregadoAutorizacoes {
@@ -21,6 +21,22 @@ export interface Usuario {
   [agregado: string]: unknown;
 }
 
+export interface CadastrarContaEntrada {
+  usuario: string;
+  apelido: string;
+  email: string;
+  senha: string;
+  cidade?: string | null;
+  descricao?: string | null;
+}
+
+export interface CadastroContaResposta {
+  usuario: string;
+  apelido: string;
+  email: string;
+  perfilId: string;
+}
+
 function cabecalhoBasic(usuario: string, senha: string): string {
   // btoa só aceita Latin-1; passar por UTF-8 evita falhar com acentos na senha.
   const bytes = new TextEncoder().encode(`${usuario}:${senha}`);
@@ -28,8 +44,19 @@ function cabecalhoBasic(usuario: string, senha: string): string {
 }
 
 export function mensagemErroAutenticacao(erro: unknown): string {
-  return erro instanceof ErroHttp && erro.status === 401
-    ? 'Usuário ou senha inválidos.'
+  if (erro instanceof ErroHttp) {
+    const corpo = erro.corpo;
+    if (typeof corpo === 'object' && corpo !== null && 'mensagem' in corpo) {
+      if (typeof corpo.mensagem === 'string' && corpo.mensagem.trim()) {
+        return corpo.mensagem;
+      }
+    }
+    if (erro.status === 401) {
+      return 'Usuário ou senha inválidos.';
+    }
+  }
+  return mensagemErro(erro) !== 'Não foi possível concluir a operação. Tente novamente.'
+    ? mensagemErro(erro)
     : 'Não foi possível entrar. Tente novamente.';
 }
 
@@ -64,6 +91,18 @@ export async function entrar(usuario: string, senha: string): Promise<Usuario> {
   const autenticado = await autenticar(usuario, senha);
   clienteConsultas.setQueryData(chaveAutenticacao, autenticado);
   return autenticado;
+}
+
+/**
+ * Cadastra uma nova conta no banco relacional (`POST /backend/autenticacao/cadastro`), criando
+ * automaticamente o perfil comunitário e autenticando a sessão imediatamente.
+ */
+export async function cadastrarConta(entrada: CadastrarContaEntrada): Promise<Usuario> {
+  const criado = await chamarApi<CadastroContaResposta>('/backend/autenticacao/cadastro', {
+    method: 'POST',
+    corpo: entrada,
+  });
+  return entrar(criado.usuario || entrada.usuario, entrada.senha);
 }
 
 /** Encerra a sessão no backend, sem mexer no estado da aplicação. Falhas são ignoradas. */

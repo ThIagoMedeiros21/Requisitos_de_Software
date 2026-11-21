@@ -7,7 +7,10 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/backend': { target: 'http://localhost:8080', secure: false },
+      '/backend': {
+        target: process.env.VITE_BACKEND_URL ?? 'http://localhost:18080',
+        secure: false,
+      },
     },
   },
   test: {

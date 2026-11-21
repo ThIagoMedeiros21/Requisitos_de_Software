@@ -32,6 +32,17 @@ function perfilBase(parcial: Partial<PerfilComunitarioVisaoDto> = {}): PerfilCom
         cor: 'Vermelho',
         precoMercado: 1850,
         imagem: null,
+        card_set_id: 'OP01-001',
+        card_name: 'Monkey D. Luffy',
+        set_id: 'OP-01',
+        set_name: 'Romance Dawn',
+        rarity: 'LÍDER / SEC',
+        card_color: 'Vermelho',
+        card_type: 'Leader',
+        card_power: '5000',
+        sub_types: 'Straw Hat Crew Supernovas',
+        market_price: 1850,
+        card_image: 'https://optcgapi.com/media/static/Card_Images/OP01-001.jpg',
       },
     ],
     cartasColecaoDisponiveis: [
@@ -137,6 +148,8 @@ describe('ProfilePage e EditProfileModal (F001 — P01 a P05)', () => {
 
     expect(await screen.findByRole('heading', { name: 'LuffyBR' })).toBeInTheDocument();
     expect(screen.getByText('1 de 4 slots preenchidos')).toBeInTheDocument();
+    expect(screen.getByText(/Romance Dawn/i)).toBeInTheDocument();
+    expect(screen.getByText(/Leader • 5000/i)).toBeInTheDocument();
     expect(screen.getAllByText('Slot Disponível')).toHaveLength(3);
 
     await user.click(screen.getAllByRole('button', { name: '+ Adicionar Carta' })[0]!);

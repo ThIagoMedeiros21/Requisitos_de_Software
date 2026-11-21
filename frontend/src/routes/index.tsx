@@ -24,6 +24,12 @@ export const rotas = [
         }),
       },
       {
+        path: 'cadastro',
+        lazy: async () => ({
+          Component: (await import('../features/auth/pages/RegisterPage')).RegisterPage,
+        }),
+      },
+      {
         Component: ProtectedRoute,
         ErrorBoundary: ErrorFallback,
         loader: exigirAutenticacao,

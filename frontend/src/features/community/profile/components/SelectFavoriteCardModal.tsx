@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Icon } from '../../../../components/ui/Icon';
 import { useFixarCartaFavorita } from '../api/profileQueries';
 import { useProfileUiStore } from '../stores/useProfileUiStore';
@@ -12,6 +13,7 @@ export function SelectFavoriteCardModal({ perfil }: { perfil: PerfilComunitarioV
   const filtro = useProfileUiStore((estado) => estado.filtroColecaoSlot);
   const definirFiltro = useProfileUiStore((estado) => estado.definirFiltroColecaoSlot);
   const fecharModal = useProfileUiStore((estado) => estado.fecharModalSlot);
+  const [imagensComFalha, definirImagensComFalha] = useState<Record<string, boolean>>({});
 
   const fixarCarta = useFixarCartaFavorita(perfil.id);
 
@@ -24,10 +26,15 @@ export function SelectFavoriteCardModal({ perfil }: { perfil: PerfilComunitarioV
     if (!termo) {
       return true;
     }
+    const nome = (carta.card_name ?? carta.nome).toLowerCase();
+    const codigo = (carta.card_set_id ?? carta.codigo).toLowerCase();
+    const cor = (carta.card_color ?? carta.cor).toLowerCase();
+    const colecao = (carta.set_name ?? '').toLowerCase();
     return (
-      carta.nome.toLowerCase().includes(termo) ||
-      carta.codigo.toLowerCase().includes(termo) ||
-      carta.cor.toLowerCase().includes(termo)
+      nome.includes(termo) ||
+      codigo.includes(termo) ||
+      cor.includes(termo) ||
+      colecao.includes(termo)
     );
   });
 
@@ -109,46 +116,61 @@ export function SelectFavoriteCardModal({ perfil }: { perfil: PerfilComunitarioV
               </div>
             ) : (
               <ul className="m-0 list-none space-y-2 p-0">
-                {cartasFiltradas.map((carta) => (
-                  <li
-                    key={carta.cartaId}
-                    className="flex items-center justify-between gap-space-sm rounded-xl border border-ice-border bg-surface-container-lowest p-3 transition-colors hover:bg-surface-container-low/50"
-                  >
-                    <div className="flex items-center gap-space-sm">
-                      <div className="flex h-12 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-deep-navy font-label-sm text-[10px] font-bold text-pure-white">
-                        {carta.imagem ? (
-                          <img
-                            src={carta.imagem}
-                            alt={carta.nome}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          carta.codigo
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-headline-sm text-headline-sm text-deep-navy">
-                          {carta.nome}
-                        </p>
-                        <p className="font-body-sm text-body-sm text-text-muted">
-                          {carta.codigo} • {carta.raridade} • {carta.cor} •{' '}
-                          <span className="font-semibold text-deep-navy">
-                            {formatarPreco(carta.precoMercado)}
-                          </span>
-                        </p>
-                      </div>
-                    </div>
+                {cartasFiltradas.map((carta) => {
+                  const codigo = carta.card_set_id ?? carta.codigo;
+                  const nome = carta.card_name ?? carta.nome;
+                  const raridade = carta.rarity ?? carta.raridade;
+                  const cor = carta.card_color ?? carta.cor;
+                  const preco = carta.market_price ?? carta.precoMercado;
+                  const urlImagem = carta.card_image ?? carta.imagem;
+                  const exibirImagem = Boolean(urlImagem) && !imagensComFalha[carta.cartaId];
 
-                    <button
-                      type="button"
-                      disabled={carta.jaDestacada || fixarCarta.isPending}
-                      onClick={() => aoFixar(carta.cartaId)}
-                      className="flex-shrink-0 rounded-lg bg-ocean-blue px-3.5 py-2 font-label-sm text-label-sm font-semibold text-pure-white shadow-sm transition-colors hover:bg-deep-navy disabled:bg-surface-container disabled:text-secondary"
+                  return (
+                    <li
+                      key={carta.cartaId}
+                      className="flex items-center justify-between gap-space-sm rounded-xl border border-ice-border bg-surface-container-lowest p-3 transition-colors hover:bg-surface-container-low/50"
                     >
-                      {carta.jaDestacada ? 'Já fixada' : 'Fixar Slot'}
-                    </button>
-                  </li>
-                ))}
+                      <div className="flex items-center gap-space-sm">
+                        <div className="flex h-12 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-deep-navy font-label-sm text-[10px] font-bold text-pure-white">
+                          {exibirImagem ? (
+                            <img
+                              src={urlImagem!}
+                              alt={nome}
+                              onError={() =>
+                                definirImagensComFalha((atual) => ({
+                                  ...atual,
+                                  [carta.cartaId]: true,
+                                }))
+                              }
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            codigo
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-headline-sm text-headline-sm text-deep-navy">{nome}</p>
+                          <p className="font-body-sm text-body-sm text-text-muted">
+                            {codigo} • {raridade} • {cor}
+                            {carta.set_name ? ` • ${carta.set_name}` : ''} •{' '}
+                            <span className="font-semibold text-deep-navy">
+                              {formatarPreco(preco)}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={carta.jaDestacada || fixarCarta.isPending}
+                        onClick={() => aoFixar(carta.cartaId)}
+                        className="flex-shrink-0 rounded-lg bg-ocean-blue px-3.5 py-2 font-label-sm text-label-sm font-semibold text-pure-white shadow-sm transition-colors hover:bg-deep-navy disabled:bg-surface-container disabled:text-secondary"
+                      >
+                        {carta.jaDestacada ? 'Já fixada' : 'Fixar Slot'}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
