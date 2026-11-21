@@ -29,6 +29,15 @@ public class SegurancaConfiguracao extends SegurancaConfiguracaoAbstrata {
 		var usuario = User.withUsername("u").password(codificadorSenha.encode("u"))
 				.authorities(Autorizacao.USUARIO.name()).build();
 
-		return new InMemoryUserDetailsManager(administrador, usuario);
+		var lucas = User.withUsername("lucas").password(codificadorSenha.encode("lucas"))
+				.authorities(Autorizacao.USUARIO.name()).build();
+
+		var ricardo = User.withUsername("ricardo").password(codificadorSenha.encode("ricardo"))
+				.authorities(Autorizacao.USUARIO.name()).build();
+
+		var thiago = User.withUsername("thiago").password(codificadorSenha.encode("thiago"))
+				.authorities(Autorizacao.USUARIO.name()).build();
+
+		return new InMemoryUserDetailsManager(administrador, usuario, lucas, ricardo, thiago);
 	}
 }
