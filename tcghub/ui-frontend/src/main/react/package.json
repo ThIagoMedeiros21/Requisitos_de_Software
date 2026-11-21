@@ -3,8 +3,8 @@
   "version": "1.0.0-SNAPSHOT",
   "private": true,
   "type": "module",
-  "packageManager": "npm@11.12.1",
   "scripts": {
+    "dev": "vite",
     "start": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
