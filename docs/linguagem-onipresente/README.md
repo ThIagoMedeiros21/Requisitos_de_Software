@@ -104,14 +104,16 @@ Este glossário estabelece a **Linguagem Onipresente** oficial (em **português 
 
 | Termo | Tipo DDD | Definição e Regras |
 | :--- | :--- | :--- |
-| **Deck Favorito** | Entidade Raiz de Agregado (`DeckFavorito`) | Vínculo entre o perfil comunitário do usuário e um `Deck` oficial do Catálogo, permitindo exibição no perfil e inspeção interativa da composição. |
+| **Deck Favorito** | Entidade Raiz de Agregado (`DeckFavorito`) | Vínculo entre o perfil comunitário do usuário e um `Deck` oficial do Catálogo, permitindo exibição no perfil e inspeção interativa da composição (`DFA_DECK_FAVORITO`). |
 | **Identificador do Deck Favorito** | Objeto de Valor (`DeckFavoritoIdentificador`) | Chave identificadora do registro de deck favorito no perfil do usuário. |
-| **Limite de 4 Decks Favoritos** | Invariante de Negócio | Cada perfil pode ter **no máximo 4 decks favoritos**. A tentativa de incluir o 5º deck é rejeitada até que outro seja removido. |
-| **Visibilidade dos Decks Favoritos** | Objeto de Valor / Estado (`PUBLICO` \| `OCULTO`) | Controle de privacidade que permite ocultar a lista de decks favoritos para visitantes no perfil público sem apagar os decks salvos pelo proprietário. |
-| **Composição do Deck** | Projeção sob Demanda (`ComposicaoDeck`) | Estrutura expandida de um deck retornada via SPI do Catálogo: líder (código, nome, cor, custo/vida/poder), contagem agrupada (1 Líder, Personagens, Eventos, Estágios — total 50+1), lista de cartas com quantidade, preço unitário e custo estimado total no mercado. |
-| **Copiar Decklist** | Ação de Interface | Ação na visualização expandida que copia a lista estruturada de cartas do deck para a área de transferência do usuário. |
-| **Deck Inativo** | Estado de Referência | Deck marcado como `INATIVO` no Catálogo. Não pode ser adicionado por novos usuários, mas permanece preservado para quem já o tinha nos favoritos antes da inativação. |
-| **Proxy de Integração com Catálogo** | Proxy GoF (`CatalogoDeckProxy`) | Proxy responsável por consultar a SPI do contexto de `Catálogo` (`loja`) para validar existência/status do deck na inclusão e obter a `ComposicaoDeck` atualizada na expansão, tratando falhas de indisponibilidade do serviço remoto sem acessar o banco de `loja`. |
+| **Identificador do Deck** | Objeto de Valor (`DeckIdentificador`) | Identificador canônico do deck no Catálogo / `optcgapi.com` (ex.: `ST-01`, `ST-10`, `D1`), usado como referência desacoplada sem foreign key para o banco de `loja`. |
+| **Limite de 4 Decks Favoritos** | Invariante de Negócio (`RN001`) | Cada perfil pode ter **no máximo 4 decks favoritos**. A tentativa de incluir o 5º deck é rejeitada até que outro seja removido. |
+| **Visibilidade dos Decks Favoritos** | Flag de Privacidade (`PCM_DECKS_FAVORITOS_VISIVEIS`) | Controle booleano no perfil (`PUBLICO` \| `OCULTO`) que permite ocultar a lista de decks favoritos para visitantes no perfil público sem apagar os decks salvos pelo proprietário (`RN004`). |
+| **Composição do Deck** | Objeto de Valor / Projeção (`ComposicaoDeck`) | Estrutura expandida de um deck retornada sob demanda via SPI do Catálogo (`optcgapi.com` `/api/decks/{st_id}/`): líder (código, nome, cor, vida/poder), 50 cartas oficiais agrupáveis por tipo (`Personagens`, `Eventos`, `Estágios`) ou por custo, conformidade Bandai (máx. 4 cópias por carta) e custo estimado total no mercado. |
+| **Item de Composição do Deck** | Objeto de Valor (`ItemComposicaoDeck`) | Entrada individual dentro de `ComposicaoDeck`: `card_set_id`, nome, tipo, cor, custo, poder, raridade, quantidade (`1` para líder, `1` a `4` para demais cartas), preço unitário (`market_price`), subtotal e URL da imagem oficial. |
+| **Exportação / Cópia no Formato Bandai** | Ação de Interface (`Copiar Decklist`) | Exportação da lista estruturada de cartas do deck no formato oficial Bandai TCG (linhas `<quantidade>x<card_set_id>`, ex.: `1xOP01-001`, `4xOP01-016`) para a área de transferência do usuário. |
+| **Deck Inativo / Descontinuado** | Estado de Referência (`RN002`) | Deck marcado como `INATIVO` no Catálogo. Não pode ser adicionado por novos usuários, mas permanece preservado com badge **Descontinuado / Inativo no Catálogo** para quem já o favoritou antes da inativação. |
+| **Proxy de Integração com Catálogo** | Proxy GoF (`CatalogoDeckProxy`) | Proxy exclusivo de Lucas responsável por consultar a SPI do contexto de `Catálogo` (`optcgapi.com` `/api/allDecks/` e `/api/decks/{st_id}/`) para validar existência/status do deck na inclusão e obter a `ComposicaoDeck` atualizada na expansão, tratando falhas de indisponibilidade (`503`) sem acessar o banco de `loja`. |
 
 ---
 

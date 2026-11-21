@@ -75,10 +75,10 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P05** | Seleção de carta favorita (Modal) | `a20513d71abd449ba2b482f6bcc24089` (modal *Escolher Carta Favorita*) | Modal em `/comunidade/perfil` | `features/community/profile/SelectFavoriteCardModal.tsx`<br>BFF: `POST .../:id/fixar-destaque` |
 | **P19** | Buscar colecionadores e solicitar amizade | `41b6841da5df4aa1933c977876f1b673` (`buscar_colecionadores.html`) | `/comunidade/colecionadores` | `features/community/friends/FindCollectorsPage.tsx`<br>BFF: `GET /backend/comunidade/amizade/inclusao`, `POST /backend/comunidade/amizade/incluir` |
 | **P20** | Rede de amigos e solicitações pendentes | `f30b49e5ac5b47f793be5f623ad26d43` (`rede_de_amigos.html`) | `/comunidade/amigos` | `features/community/friends/FriendsNetworkPage.tsx`<br>BFF: `GET /backend/comunidade/amizade/pesquisa`, `POST .../aceitar`, `recusar`, `cancelar`, `remover` |
-| **P06** | Perfil com decks e wishlist | `a778927205374bb68481d5bb1f1dc11d` / `9b383bb48db94fe485d3e71979323c57` | `/comunidade/perfil` | `ProfilePage.tsx` (seção 2 colunas: `FavoriteDecksSection` + `PublicWishlistCard`) |
-| **P07** | Lista de decks favoritos | `a778927205374bb68481d5bb1f1dc11d` | `/comunidade/decks-favoritos` | `features/community/decks/FavoriteDecksPage.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST .../:id/excluir`, `ocultar`, `reexibir` |
-| **P08** | Adicionar deck favorito (Modal) | `a778927205374bb68481d5bb1f1dc11d` (modal *Adicionar Deck Favorito*) | Modal em `/comunidade/decks-favoritos` | `features/community/decks/AddFavoriteDeckModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/inclusao`, `POST .../incluir` |
-| **P09** | Composição do deck favorito (Modal) | `d26c9d5f978f422fa021153ec9cfe885` | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil/:id` | `features/community/decks/DeckCompositionModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/:id/visualizacao` |
+| **P06** | Perfil com decks e wishlist | `a778927205374bb68481d5bb1f1dc11d` / `9b383bb48db94fe485d3e71979323c57` | `/comunidade/perfil`<br>`/comunidade/perfil/:id` | `features/community/decks/components/FavoriteDecksProfileCard.tsx` (em `ProfilePage.tsx`)<br>BFF: `GET /backend/comunidade/deck-favorito/perfil/{perfilId}` |
+| **P07** | Lista de decks favoritos | `a778927205374bb68481d5bb1f1dc11d` | `/comunidade/decks-favoritos` | `features/community/decks/pages/FavoriteDecksPage.tsx`, `stores/decksUiStore.ts`<br>BFF: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST .../{deckId}/excluir`, `POST .../ocultar`, `POST .../reexibir` |
+| **P08** | Adicionar deck favorito (Modal/Drawer) | `a778927205374bb68481d5bb1f1dc11d` (modal *Adicionar Deck Favorito*) | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil` | `features/community/decks/components/AddFavoriteDeckModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/catalogo?termo=&cor=`, `POST /backend/comunidade/deck-favorito/incluir` |
+| **P09** | Composição do deck favorito (Modal) | `d26c9d5f978f422fa021153ec9cfe885` | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil/:id` | `features/community/decks/components/DeckCompositionModal.tsx`, `utils/bandaiExport.ts`<br>BFF: `GET /backend/comunidade/deck-favorito/{deckId}/composicao` |
 | **P10** | Coleção pessoal como entrada da avaliação | `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090` | `/minha-colecao` *(entrada de apoio)* | `features/community/reviews/CollectionReviewEntryCard.tsx` |
 | **P11** | Detalhes da carta e avaliações | `21c3501f0e844d2388377f55414687b4` | `/catalogo/cartas/:id` *(entrada de apoio)* | `features/community/reviews/ProductReviewsSection.tsx` |
 | **P12** | Avaliações da comunidade | `21c3501f0e844d2388377f55414687b4` | Seção em `/catalogo/cartas/:id` | `features/community/reviews/ProductReviewsSection.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/pesquisa` |
@@ -171,30 +171,78 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 
 ---
 
-## 4. Protótipos de Alta Fidelidade — `comunidade / F002`: Decks Favoritos
+## 4. Protótipos de Alta Fidelidade — `comunidade / F002`: Decks Favoritos (Etapa 3.2)
+
+> [!NOTE]
+> Especificação detalhada alinhada ao plano técnico [etapa-3-2-decks-favoritos.md](../plans/etapa-3-2-decks-favoritos.md), ao Design System Stitch *Nautical Blue & White Marketplace* (`projects/18247718655827442438`), ao padrão GoF exclusivo **`Proxy`** (`CatalogoDeckProxy` + `PerfilComunitarioVisibilidadeProxy`, **zero `Observer`**) e aos contratos `https://optcgapi.com` (`/api/allDecks/`, `/api/decks/{st_id}/`).
+
+### 4.1 Inventário de Componentes e Estado Efêmero (`frontend/src/`)
+- **Store Zustand (`src/stores/decksUiStore.ts`)**: `modalAdicionarAberto`, `deckIdComposicaoAberta`, `termoBuscaCatalogo`, `corFiltroCatalogo`, `filtroTipoComposicao` (`'TODOS' | 'Leader' | 'Character' | 'Event' | 'Stage'`), `ordenacaoComposicao` (`'TIPO' | 'CUSTO'`), ações de controle e `resetarEstadoUi()`.
+- **Camada de Dados (`src/features/community/decks/`)**: `types/decks.types.ts`, `api/decksApi.ts`, `api/decksQueries.ts` (`queryOptions` + `useSuspenseQuery` + `useMutation` invalidando `['comunidade', 'deck-favorito']` e `['comunidade', 'perfil-comunitario']`), `utils/bandaiExport.ts`.
+- **Navegação (`src/components/layout/CommunitySubNav.tsx` e `src/routes/index.tsx`)**: habilita a pílula **`Decks Favoritos`** apontando para `/comunidade/decks-favoritos` (com redirect legado `/comunidade/deck-favorito/pesquisa` → `/comunidade/decks-favoritos`).
 
 ### Protótipo 6 — Perfil com Decks e Wishlist (`P06`)
-- **Rota Frontend**: `/comunidade/perfil` e `/comunidade/perfil/:id` (Stitch `a778927205374bb68481d5bb1f1dc11d` / `9b383bb48db94fe485d3e71979323c57`).
-- **Layout**: Abaixo de `Cartas Favoritas`, grid de 2 colunas: esquerda `Decks Favoritos` (até 4 decks no formato oficial `1 Líder + 50 Cartas`) e direita `Wishlist Pública` (link tokenizado `tcghub.com/w/...` + botão `Copiar`).
-- **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy`)**: Quando `decksFavoritosVisiveis == false`, visitantes não veem o bloco de decks favoritos no perfil público; o proprietário continua vendo com selo `Oculto no perfil público`.
+- **Telas Stitch**: `a778927205374bb68481d5bb1f1dc11d` (*Comunidade: Decks Favoritos & Perfil*) e `9b383bb48db94fe485d3e71979323c57` (*Perfil de @MugiwaraLuffy*).
+- **Rota Frontend**: `/comunidade/perfil` e `/comunidade/perfil/:id` (componente `FavoriteDecksProfileCard.tsx` integrado a `ProfilePage.tsx`).
+- **Operação BFF**: `GET /backend/comunidade/deck-favorito/perfil/{perfilId}`.
+- **Layout e Tokens Stitch**:
+  - Abaixo de `Cartas Favoritas`, seção de 2 colunas (`grid-cols-1 lg:grid-cols-12 gap-space-lg`): esquerda `Decks Favoritos` (`bg-pure-white rounded-xl border border-ice-border/60 p-space-lg shadow-sm`), direita `Wishlist Pública`.
+  - Cabeçalho com ícone `view_carousel` (`text-ocean-blue`), título `Decks Favoritos` (`font-headline-md text-deep-navy`), pílula `X/4 decks favoritos` (`bg-sky-tint text-ocean-blue`), subtítulo `"Formato Oficial: 1 Líder + 50 Cartas"`, atalho `Gerenciar Decks` (`/comunidade/decks-favoritos`) e botão `+ Adicionar deck favorito` (somente dono, desabilitado em `4/4`).
+  - Lista compacta (ou grade 2×2 na visualização pública de amigo) exibindo até 4 decks com miniatura do líder (`aspect-[2.5/3.5]` com fallback SVG náutico), nome, badge `50 + 1`, `Líder: <nome> (<código>)`, custo estimado em `font-tabular-price text-deep-navy`, botão `Ver Composição` / `Visualizar deck` (`bg-ocean-blue hover:bg-deep-navy text-pure-white`) e botão `Remover` (somente dono).
+- **Privacidade / Proxy (`PerfilComunitarioVisibilidadeProxy` — `RN004`)**:
+  - Quando `PCM_DECKS_FAVORITOS_VISIVEIS == false`, o Proxy retorna lista vazia/oculta para visitantes e o card não expõe os decks a terceiros; para o proprietário, exibe os decks com badge informativo `Oculto no perfil público` (`bg-surface-container text-secondary`) e o toggle de reexibição.
 
-### Protótipo 7 — Lista de Decks Favoritos (`P07`)
-- **Rota Frontend**: `/comunidade/decks-favoritos`.
-- **Operações BFF**: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST /backend/comunidade/deck-favorito/:id/excluir`, `POST /backend/comunidade/deck-favorito/ocultar`, `POST /backend/comunidade/deck-favorito/reexibir`.
-- **Layout**: Cabeçalho com badge `X/4 decks favoritos`, toggle `Exibir no Perfil Público` (`ocultar`/`reexibir`) e botão `+ Adicionar deck favorito` (desabilitado em `4/4`). Lista com miniatura do líder, nome do deck, badge `50 + 1`, `Líder: ...`, custo em `tabular-price`, botão `Visualizar deck` e botão `Remover`.
-- **Estados**: Deck tornado `INATIVO` no Catálogo após favoritado permanece visível para quem já o favoritou com badge `Inativo no Catálogo`; estado vazio orienta inclusão de até 4 decks.
+### Protótipo 7 — Lista e Gestão de Decks Favoritos (`P07`)
+- **Tela Stitch**: `a778927205374bb68481d5bb1f1dc11d`.
+- **Rota Frontend**: `/comunidade/decks-favoritos` (`FavoriteDecksPage.tsx`).
+- **Operações BFF**: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST /backend/comunidade/deck-favorito/{deckId}/excluir`, `POST /backend/comunidade/deck-favorito/ocultar`, `POST /backend/comunidade/deck-favorito/reexibir`.
+- **Layout e Componentes**:
+  - `CommunitySubNav` com aba `Decks Favoritos` ativa (`bg-deep-navy text-pure-white`).
+  - **Cabeçalho Operacional**: Contador `X/4 decks favoritos`, **Toggle de Visibilidade Pública** (`role="switch"`, `aria-checked={decksFavoritosVisiveis}`, rótulo `"Exibir no Perfil Público"` com legenda `"Visível para visitantes"` / `"Oculto no perfil público — somente você vê"` disparando `POST /ocultar` ou `POST /reexibir`), e CTA `+ Adicionar deck favorito` (`bg-ocean-blue text-pure-white`, desabilitado quando `total >= 4` com tooltip `"Limite de 4 decks favoritos atingido"`).
+  - **Cards de Deck Favorito**: Miniatura do líder, nome (`Straw Hat Aggro Red`), badge `50 + 1`, código/cor do líder (`OP01-001 • Vermelho`), `Custo Estimado` em `font-tabular-price`, botões `Visualizar deck` (abre `P09`) e `Remover` (`text-error hover:bg-error-container/30`).
+  - **Badge de Deck Descontinuado / Inativo no Catálogo (`RN002`)**: Quando um deck já favoritado se torna inativo (`ativo === false`), exibe pílula destacada **`Descontinuado / Inativo no Catálogo`** (`bg-status-warning-bg text-status-warning-text border border-steel-border`, ícone `inventory_2`) preservando visualização e remoção pelo dono, enquanto novas inclusões são bloqueadas.
+- **Estados**:
+  - **Vazio (`0/4`)**: Card pontilhado náutico `"Você ainda não favoritou nenhum deck. Explore o catálogo oficial e fixe até 4 decks competitivos."` + botão `+ Adicionar deck favorito`.
+  - **Carregamento**: Skeleton em `bg-surface-container-low` via `Suspense`.
+  - **Erro**: Rejeições (`403` usuário não proprietário, `404` deck não favoritado) publicadas no `#tcg-toast` (`useToastStore`).
 
-### Protótipo 8 — Adicionar Deck Favorito (`P08`)
-- **Rota Frontend**: Modal `Adicionar Deck Favorito` acionado em `/comunidade/decks-favoritos`.
-- **Operações BFF**: `GET /backend/comunidade/deck-favorito/inclusao` e `POST /backend/comunidade/deck-favorito/incluir`.
-- **Layout**: Banner `"Limite oficial: máximo de 4 decks favoritos • X de 4 slots ocupados"`, campo de busca `"Buscar deck por nome, líder ou código..."`, lista de decks **ativos** via `CatalogoDeckProxy` com `✓ Adicionado` (desabilitado) ou `+ Adicionar`, e rodapé `"Formato: 1 Líder + 50 Cartas"` + `Cancelar`.
-- **Erros e Proxy (`CatalogoDeckProxy`)**: Rejeita 5º deck, duplicata, deck inativo ou inexistente; se a SPI do Catálogo estiver indisponível, exibe banner de indisponibilidade sem quebrar a tela.
+### Protótipo 8 — Modal/Drawer de Busca de Decks Ativos no Catálogo (`P08`)
+- **Tela Stitch**: `a778927205374bb68481d5bb1f1dc11d` (modal *Adicionar Deck Favorito*).
+- **Rota Frontend**: Modal/Drawer `AddFavoriteDeckModal.tsx` acionado a partir de `/comunidade/decks-favoritos` ou `/comunidade/perfil`.
+- **Operações BFF**: `GET /backend/comunidade/deck-favorito/catalogo?termo=&cor=` (via `CatalogoDeckProxy` / `optcgapi.com/api/allDecks/`) e `POST /backend/comunidade/deck-favorito/incluir` (`{ deckId }`).
+- **Layout e Componentes**:
+  - Backdrop náutico (`bg-deep-navy/55 backdrop-blur-sm`) e container `bg-pure-white rounded-2xl shadow-level-4`.
+  - Cabeçalho: título `Adicionar Deck Favorito`, subtítulo `"Pesquise decks ativos no catálogo oficial Bandai e fixe nos seus favoritos"`, botão fechar (`×`).
+  - Banner de limite: `bg-status-positive-bg text-status-positive-text` (ou `bg-status-warning-bg text-status-warning-text` quando `4/4`) exibindo `"Limite oficial: máximo de 4 decks favoritos • X de 4 slots ocupados"`.
+  - **Filtros em Tempo Real**:
+    - Input de busca: `"Buscar deck por nome, líder ou código (ex: ST-01, Zoro)..."` (`ring-1 ring-steel-border focus:ring-2 focus:ring-ocean-blue`).
+    - Chips de filtro por **Cor**: `Todas`, `Vermelho`, `Verde`, `Azul`, `Roxo`, `Preto`, `Amarelo` (ativo em `bg-deep-navy text-pure-white`, padrão em `bg-surface-container-low text-secondary`).
+  - **Lista de Decks Ativos**: Cada item exibe miniatura do líder (fallback SVG náutico), nome do deck, código (`ST-01`), cor, `Líder: <nome> (<card_set_id>)`, custo estimado em `font-tabular-price` e ação contextual:
+    - Se `jaFavoritado === true`: botão desabilitado `✓ Adicionado` (`bg-sky-tint text-ocean-blue`).
+    - Se `total >= 4`: botão desabilitado `Limite 4/4`.
+    - Caso contrário: CTA **`Favoritar`** (`+ Adicionar`, `bg-ocean-blue hover:bg-deep-navy text-pure-white`).
+  - Rodapé: `"Formato Oficial: 1 Líder + 50 Cartas"` e botão `Cancelar`.
+- **Estados e Proxy (`CatalogoDeckProxy` — `RN001`, `RN002`, `RN003`)**:
+  - Decks inativos não aparecem na lista de escolha; tentativas diretas de inclusão de deck inativo/inexistente/duplicado/5º deck exibem mensagem clara no toast (`bg-error-container text-on-error-container`).
+  - **Indisponibilidade do Catálogo (`503`)**: Exibe banner tratável `"Serviço de Catálogo temporariamente indisponível. Tente novamente em instantes."` com botão `Tentar novamente`.
 
-### Protótipo 9 — Composição do Deck Favorito (`P09`)
-- **Rota Frontend**: Modal amplo `Composição do Deck` (Stitch `d26c9d5f978f422fa021153ec9cfe885`).
-- **Operações BFF**: `GET /backend/comunidade/deck-favorito/:id/visualizacao`.
-- **Layout**: Cabeçalho com nome do deck, líder, badge `51 cartas (1 Líder + 50 Cartas)`, pílulas `1 Líder`, `Personagens`, `Eventos`, `Estágios`, `Custo Estimado no Mercado` em `tabular-price`, lista agrupada com quantidade (`x1 Líder`, `x4 no Deck`), preço unitário, link `Ver no Catálogo →` e rodapé com `Fechar` e `Copiar Decklist`.
-- **Proxy (`CatalogoDeckProxy`)**: Carrega via SPI do Catálogo sem acessar banco de `loja`; exibe fallback tratável quando o serviço de Catálogo estiver indisponível.
+### Protótipo 9 — Modal de Expansão da Composição do Deck (`P09`)
+- **Tela Stitch**: `d26c9d5f978f422fa021153ec9cfe885` (*Comunidade: Modal Visualizar Deck*).
+- **Rota Frontend**: Modal amplo `DeckCompositionModal.tsx` acionado de `P06`, `P07` ou perfil de amigo (`/comunidade/perfil/:id`).
+- **Operação BFF**: `GET /backend/comunidade/deck-favorito/{deckId}/composicao` (via `CatalogoDeckProxy` / `optcgapi.com/api/decks/{st_id}/`).
+- **Layout e Componentes**:
+  - **Cabeçalho**: Nome do deck (`font-headline-lg text-deep-navy`), subtítulo `Líder: Monkey D. Luffy (OP01-001)`, badge `51 cartas (1 Líder + 50 Cartas)` (`bg-sky-tint text-ocean-blue`), badge `Descontinuado / Inativo` quando aplicável, e botão fechar (`×`).
+  - **Faixa de Resumo e Custo**: Pílulas de filtro/contagem por tipo (`Todos`, `1 Líder`, `Personagens`, `Eventos`, `Estágios`), seletor de agrupamento **`Agrupar por Tipo` | `Agrupar por Custo`** e destaque à direita `Custo Estimado no Mercado: R$ 890,00` (`font-tabular-price text-deep-navy`).
+  - **Barra de Conformidade Bandai**: `"COMPOSIÇÃO DETALHADA E AGRUPADA"` + selo verde/náutico `bg-status-positive-bg text-status-positive-text`: **`Conformidade Estrita (1 Líder + 50 Cartas • Máx 4 cópias)`**.
+  - **Lista Agrupada de Cartas (`ItemComposicaoDeck`)**: Para cada carta (`card_set_id`, `card_name`, `card_type`, `card_color`, `card_cost`, `card_power`, `rarity`, `market_price`, `card_image`):
+    - Miniatura `aspect-[2.5/3.5]` com fallback SVG náutico quando imagem indisponível;
+    - Badges de raridade (`bg-deep-navy text-pure-white`), código `card_set_id` e tipo/cor;
+    - Nome da carta + metadados (`Custo: X • Poder: Y`);
+    - Badge de quantidade (`x1 Líder` ou `x4 no Deck`), preço unitário (`market_price`) + subtotal em `font-tabular-price` e link `Ver no Catálogo →` (`/catalogo/cartas/:card_set_id`).
+  - **Rodapé**: Selo `"Deck válido de 50 cartas • Estrutura oficial Bandai TCG"`, botão `Fechar` (ghost) e botão primário **`Copiar Decklist (Formato Bandai)`** (`bg-ocean-blue hover:bg-deep-navy text-pure-white`, ícone `content_copy`), que usa `bandaiExport.ts` para copiar linhas `1xST01-001\n4xOP01-016...` na área de transferência e dispara toast `"Decklist copiada no formato Bandai!"`.
+- **Estados e Proxy (`CatalogoDeckProxy` — `RN003`)**:
+  - **Carregamento**: Skeleton de cabeçalho + 6 linhas enquanto `GET /{deckId}/composicao` carrega.
+  - **Indisponibilidade do Catálogo (`503`)**: Estado de erro amigável dentro do modal `"Não foi possível carregar a composição porque o serviço de Catálogo está indisponível."` com botões `Tentar novamente` e `Fechar`, sem quebrar o restante da página.
 
 ---
 
