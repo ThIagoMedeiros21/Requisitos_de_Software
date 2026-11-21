@@ -14,6 +14,12 @@ import com.cesar.tgchub.tcghub.dominio.Autorizacao;
 import com.cesar.tgchub.tcghub.dominio.IUsuarioContaRepositorio;
 import com.cesar.tgchub.tcghub.dominio.UsuarioConta;
 import com.cesar.tgchub.tcghub.dominio.UsuarioIdentificador;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.CatalogoDeckProxy;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckFavorito;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckIdentificador;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.ICatalogoDeckProxy;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.spi.ICatalogoDeckConsulta;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.spi.IDeckFavoritoRepositorio;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.Apelido;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.CartaIdentificador;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.IPerfilComunitarioVisibilidadeProxy;
@@ -32,13 +38,21 @@ public class ComunidadeConfiguracao {
 	}
 
 	@Bean
+	ICatalogoDeckProxy catalogoDeckProxy(ICatalogoDeckConsulta catalogoDeckConsulta) {
+		return new CatalogoDeckProxy(catalogoDeckConsulta);
+	}
+
+	@Bean
 	ApplicationRunner inicializadorPerfisComunidade(IUsuarioContaRepositorio contaRepositorio,
-			IPerfilComunitarioRepositorio perfilRepositorio, PasswordEncoder codificadorSenha) {
+			IPerfilComunitarioRepositorio perfilRepositorio, IDeckFavoritoRepositorio deckFavoritoRepositorio,
+			PasswordEncoder codificadorSenha) {
 		return args -> {
 			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "lucas",
 					"lucas@tcghub.com", "lucas", Autorizacao.USUARIO, "LuffyBR", "Recife",
 					"Colecionador de One Piece TCG e jogador de torneios locais.",
 					List.of(new CartaIdentificador("OP01-001"), new CartaIdentificador("OP01-016")));
+			criarDecksFavoritosIniciaisSeAusentes(deckFavoritoRepositorio, "lucas",
+					List.of("ST01", "OP01-ZORO"));
 			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "ricardo",
 					"ricardo@tcghub.com", "ricardo", Autorizacao.USUARIO, "ZoroTC", "Olinda",
 					"Foco em decks agressivos vermelhos e trocas presenciais.",
@@ -53,6 +67,17 @@ public class ComunidadeConfiguracao {
 					"a", Autorizacao.ADMINISTRADOR, "AdminTCGHub", "Recife",
 					"Conta administrativa oficial do TCGHub.", List.of());
 		};
+	}
+
+	private static void criarDecksFavoritosIniciaisSeAusentes(IDeckFavoritoRepositorio deckFavoritoRepositorio,
+			String usuario, List<String> decks) {
+		var usuarioId = new UsuarioIdentificador(usuario);
+		if (deckFavoritoRepositorio.contarPorUsuario(usuarioId) == 0) {
+			for (int i = 0; i < decks.size(); i++) {
+				deckFavoritoRepositorio.incluir(new DeckFavorito(Optional.empty(), usuarioId,
+						new DeckIdentificador(decks.get(i)), i + 1, Instant.now()));
+			}
+		}
 	}
 
 	private static void criarContaEPerfilSeAusente(IUsuarioContaRepositorio contaRepositorio,

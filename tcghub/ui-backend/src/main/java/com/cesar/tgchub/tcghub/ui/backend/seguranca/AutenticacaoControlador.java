@@ -19,6 +19,7 @@ import com.cesar.tgchub.tcghub.dominio.IUsuarioContaRepositorio;
 import com.cesar.tgchub.tcghub.dominio.UsuarioConta;
 import com.cesar.tgchub.tcghub.dominio.UsuarioIdentificador;
 import com.cesar.tgchub.tcghub.dominio.comunidade.amizade.AmizadeServico;
+import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckFavoritoServico;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.Apelido;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.PerfilComunitario;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.PerfilComunitarioServico;
@@ -39,17 +40,19 @@ public class AutenticacaoControlador extends AutenticacaoControladorAbstrato {
 
 	private final PerfilComunitarioServico perfilComunitarioServico;
 	private final AmizadeServico amizadeServico;
+	private final DeckFavoritoServico deckFavoritoServico;
 	private final IUsuarioContaRepositorio contaRepositorio;
 	private final IPerfilComunitarioRepositorio perfilRepositorio;
 	private final PasswordEncoder codificadorSenha;
 
 	public AutenticacaoControlador(ISegurancaServico segurancaServico,
 			PerfilComunitarioServico perfilComunitarioServico, AmizadeServico amizadeServico,
-			IUsuarioContaRepositorio contaRepositorio, IPerfilComunitarioRepositorio perfilRepositorio,
-			PasswordEncoder codificadorSenha) {
+			DeckFavoritoServico deckFavoritoServico, IUsuarioContaRepositorio contaRepositorio,
+			IPerfilComunitarioRepositorio perfilRepositorio, PasswordEncoder codificadorSenha) {
 		super(segurancaServico);
 		this.perfilComunitarioServico = Objects.requireNonNull(perfilComunitarioServico);
 		this.amizadeServico = Objects.requireNonNull(amizadeServico);
+		this.deckFavoritoServico = Objects.requireNonNull(deckFavoritoServico);
 		this.contaRepositorio = Objects.requireNonNull(contaRepositorio);
 		this.perfilRepositorio = Objects.requireNonNull(perfilRepositorio);
 		this.codificadorSenha = Objects.requireNonNull(codificadorSenha);
@@ -59,7 +62,8 @@ public class AutenticacaoControlador extends AutenticacaoControladorAbstrato {
 	protected AutenticacaoRecurso recurso() {
 		var perfilComunitario = perfilComunitarioServico.criarAutorizacoes(Optional.empty());
 		var amizade = amizadeServico.criarAutorizacoes(Optional.empty());
-		return new AutenticacaoRecurso(segurancaServico.getUsuario(), perfilComunitario, amizade);
+		var deckFavorito = deckFavoritoServico.criarAutorizacoes(Optional.empty());
+		return new AutenticacaoRecurso(segurancaServico.getUsuario(), perfilComunitario, amizade, deckFavorito);
 	}
 
 	@PostMapping("cadastro")
