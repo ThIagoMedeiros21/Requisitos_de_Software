@@ -4,7 +4,8 @@ export type AbaComunidade =
   | 'meu-perfil'
   | 'decks-favoritos'
   | 'rede-amigos'
-  | 'buscar-colecionadores';
+  | 'buscar-colecionadores'
+  | 'abertura-preferida';
 export type SubAbaAmizade = 'meus-amigos' | 'recebidas' | 'enviadas';
 
 export interface AlvoRemocaoAmizade {

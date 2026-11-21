@@ -90,7 +90,40 @@ export const rotas = [
               return { Component: DiscoverCollectorsPage, loader: carregarColecionadores };
             },
           },
+          {
+            path: 'comunidade/aberturas',
+            lazy: async () => {
+              const [{ FavoriteOpeningsPage }, { carregarAberturasComunidade }] = await Promise.all([
+                import('../features/community/openings/pages/FavoriteOpeningsPage'),
+                import('../features/community/openings/api/openingsQueries'),
+              ]);
+              return { Component: FavoriteOpeningsPage, loader: carregarAberturasComunidade };
+            },
+          },
+          {
+            path: 'adm/aberturas',
+            lazy: async () => ({
+              Component: (await import('../features/adm/openings/pages/AdminOpeningsPage'))
+                .AdminOpeningsPage,
+            }),
+          },
           // Compatibilidade com caminhos legados D5
+          {
+            path: 'comunidade/abertura-preferida',
+            element: <Navigate to="/comunidade/aberturas" replace />,
+          },
+          {
+            path: 'comunidade/abertura-preferida/pesquisa',
+            element: <Navigate to="/comunidade/aberturas" replace />,
+          },
+          {
+            path: 'comunidade/abertura-preferida/ranking',
+            element: <Navigate to="/comunidade/aberturas" replace />,
+          },
+          {
+            path: 'adm/abertura/pesquisa',
+            element: <Navigate to="/adm/aberturas" replace />,
+          },
           {
             path: 'comunidade/perfil-comunitario/visualizacao',
             element: <Navigate to="/comunidade/perfil" replace />,

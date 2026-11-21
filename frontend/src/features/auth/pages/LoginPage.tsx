@@ -15,6 +15,7 @@ const CONTAS_DEMO: { rotulo: string; apelido: string; usuario: string; senha: st
   { rotulo: 'Lucas', apelido: '@LuffyBR', usuario: 'lucas', senha: 'lucas' },
   { rotulo: 'Ricardo', apelido: '@ZoroTC', usuario: 'ricardo', senha: 'ricardo' },
   { rotulo: 'Thiago', apelido: '@SanjiOP', usuario: 'thiago', senha: 'thiago' },
+  { rotulo: 'Admin', apelido: 'ADM', usuario: 'a', senha: 'a' },
 ];
 
 /** Só aceita retorno para um caminho da própria aplicação, nunca para outro site. */
@@ -150,7 +151,7 @@ export function LoginPage() {
           <span className="block font-label-sm text-label-sm font-semibold tracking-wider text-secondary uppercase">
             Acesso Rápido (Demonstração)
           </span>
-          <div className="grid grid-cols-3 gap-space-xs">
+          <div className="grid grid-cols-2 gap-space-xs sm:grid-cols-4">
             {CONTAS_DEMO.map((conta) => (
               <button
                 key={conta.usuario}

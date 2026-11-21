@@ -12,6 +12,7 @@ export function HeaderNavbar() {
 
   const podeBuscarPerfil = Boolean(autorizacoesDe('perfilComunitario')?.buscar);
   const podeBuscarAmizade = Boolean(autorizacoesDe('amizade')?.buscar);
+  const podeAdministrarAberturas = Boolean(autorizacoesDe('abertura')?.incluir);
 
   async function aoSair() {
     definirGavetaAberta(false);
@@ -85,6 +86,14 @@ export function HeaderNavbar() {
                     className="rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface-variant no-underline transition-colors hover:bg-surface-container-low hover:text-on-surface"
                   >
                     Amigos
+                  </Link>
+                )}
+                {podeAdministrarAberturas && (
+                  <Link
+                    to="/adm/aberturas"
+                    className="rounded-lg bg-sky-tint px-3 py-1.5 font-label-md text-label-md font-semibold text-ocean-blue no-underline transition-colors hover:bg-ocean-blue hover:text-pure-white"
+                  >
+                    Aberturas (Adm)
                   </Link>
                 )}
                 <button
@@ -230,6 +239,24 @@ export function HeaderNavbar() {
                 <Icon nome="person_search" className="text-[18px]" />
                 Buscar Colecionadores
               </Link>
+              <Link
+                to="/comunidade/aberturas"
+                onClick={() => definirGavetaAberta(false)}
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 font-label-md text-label-md font-semibold text-deep-navy no-underline hover:bg-surface-container-low"
+              >
+                <Icon nome="library_music" className="text-[18px]" />
+                Abertura Preferida
+              </Link>
+              {podeAdministrarAberturas && (
+                <Link
+                  to="/adm/aberturas"
+                  onClick={() => definirGavetaAberta(false)}
+                  className="flex items-center gap-2 rounded-xl bg-sky-tint px-3.5 py-2.5 font-label-md text-label-md font-semibold text-ocean-blue no-underline hover:bg-ocean-blue hover:text-pure-white"
+                >
+                  <Icon nome="admin_panel_settings" className="text-[18px]" />
+                  Aberturas (Adm)
+                </Link>
+              )}
             </div>
           </aside>
         </div>

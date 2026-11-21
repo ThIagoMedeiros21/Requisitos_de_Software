@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router';
 import { CommunitySubNav } from '../../../../components/layout/CommunitySubNav';
 import { FavoriteDecksProfileCard } from '../../decks/components/FavoriteDecksProfileCard';
+import { FavoriteOpeningProfileCard } from '../../openings/components/FavoriteOpeningProfileCard';
 import { consultaPerfilVisao } from '../api/profileQueries';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { FavoriteCardsSection } from '../components/FavoriteCardsSection';
@@ -53,6 +54,8 @@ export function ProfilePage() {
           <FavoriteDecksProfileCard perfil={perfil} />
           <ProfileWishlistPreview perfil={perfil} />
         </div>
+
+        <FavoriteOpeningProfileCard perfil={perfil} />
       </div>
 
       {perfil.ehProprietario && (

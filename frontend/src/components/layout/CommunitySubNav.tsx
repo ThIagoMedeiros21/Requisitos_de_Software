@@ -89,14 +89,14 @@ export function CommunitySubNav({
           <span>Buscar Colecionadores</span>
         </Link>
 
-        <button
-          type="button"
-          onClick={() => publicar('info', 'Navegando para Abertura Preferida...')}
-          className={classeAba(false)}
+        <Link
+          to="/comunidade/aberturas"
+          onClick={() => definirAbaAtiva('abertura-preferida')}
+          className={classeAba(abaAtiva === 'abertura-preferida')}
         >
           <Icon nome="library_music" className="text-[18px]" />
           <span>Abertura Preferida</span>
-        </button>
+        </Link>
       </nav>
 
       {linkVoltarAmigos && (
