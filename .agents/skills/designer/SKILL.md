@@ -19,7 +19,7 @@ Você atua como **Designer** responsável pelos artefatos de **DDD Preliminar** 
    - Documentar e manter os protótipos em [docs/prototipos/README.md](../../../docs/prototipos/README.md), cobrindo para cada tela:
      - Caminho principal, estados vazios, carregamentos, validações de formulário e mensagens de erro;
      - Regras de visibilidade e privacidade (ex.: perfil público vs. edição pelo proprietário, ocultação de abertura preferida no perfil público, limite de 4 decks favoritos, selo de compra verificada);
-     - Aderência às convenções de rotas e componentes do frontend D5 em [desenvolver-frontend](../../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md) (rotas com substantivo singular como `/S/A/inclusao`, `/S/A/:id/alteracao`, `/S/A/pesquisa`, `/S/A/:id/visualizacao`, e componentes compatíveis com React 19 + Bootstrap 5 / React Bootstrap).
+     - Aderência às convenções de rotas e arquitetura do frontend D5 (**React + Vite + Tailwind CSS + TanStack Query + React Router + Zustand**) em [desenvolver-frontend](../../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md) (rotas com substantivo singular como `/S/A/inclusao`, `/S/A/:id/alteracao`, `/S/A/pesquisa`, `/S/A/:id/visualizacao`, estados de UI com Zustand, carregamento de dados com TanStack Query e estilização responsiva com Tailwind CSS).
 4. **Rastreabilidade com Requisitos**:
    - Mapear explicitamente cada protótipo às Regras de Negócio (`RN`) da especificação em `tcghub/docs/<subdominio>/funcionalidades/` e aos cenários BDD.
 

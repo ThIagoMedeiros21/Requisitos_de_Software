@@ -3,7 +3,7 @@
 Projeto focado em cardgame.
 
 > [!IMPORTANT]
-> Este módulo integra o repositório [Requisitos_de_Software](../.agents.md). Leia [../.agents.md](../.agents.md) para a governança multi-equipes, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
+> Este módulo integra o repositório compartilhado do projeto, enquanto [../.agents.md](../.agents.md) é o **arquivo de orquestração exclusivo de Lucas Menezes e seus agentes**. Leia [../.agents.md](../.agents.md) para o fluxo fatiado por funcionalidade, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
 
 ## Engenharia de software
 - MDE (Model-Driven Engineering)
@@ -26,8 +26,11 @@ Projeto focado em cardgame.
 - DBML (Database Markup Language) 10.1.1
 - Spring Boot 4.1.1
 - React 19.3.0
+- Vite 8.3.0
+- Tailwind CSS (a adicionar em `ui-frontend/src/main/react/package.json` na Etapa 3)
 - React Router 8.5.0
 - TanStack Query 5.104.0
+- Zustand (a adicionar em `ui-frontend/src/main/react/package.json` na Etapa 3)
 - React Hook Form 7.90.0
 - React Bootstrap 2.10.10
 - Bootstrap 5.3.8
