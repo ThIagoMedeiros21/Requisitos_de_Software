@@ -1,0 +1,131 @@
+# Governança de Engenharia de Software — TCGHub (`Requisitos_de_Software`)
+
+Este documento define as regras obrigatórias de arquitetura, processo, tecnologia, padrões de projeto e governança para o desenvolvimento do projeto **TCGHub** (plataforma web para cardgame), orientando esta equipe e demais equipes que atuem no repositório.
+
+O código-fonte e os modelos técnicos do projeto residem no subdiretório [tcghub/](tcghub/) e seguem integralmente as convenções técnicas descritas em [tcghub/AGENTS.md](tcghub/AGENTS.md).
+
+---
+
+## 1. Visão Geral, Equipe e Escopo por Ondas
+
+### 1.1 Integrantes e Distribuição de Funcionalidades
+O projeto completo exige funcionalidades **completas** (operações de escrita, validação, regras de negócio e consulta — nunca apenas leitura), persistência em banco de dados relacional e interface web.
+
+| Integrante | Escopo / Área | Funcionalidades | Subdomínios | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lucas Menezes** | Comunidade e interação | 1. Perfil e amigos<br>2. Decks favoritos<br>3. Avaliação de cartas<br>4. Abertura preferida do anime One Piece | `comunidade` (+ cadastro administrativo em `adm`) | Ativo |
+| **Ricardo Freitas** | Compras e organização de cartas | 1. Comprar produto<br>2. Recomendação de cartas<br>3. Wishlist<br>4. Minha coleção | `loja` (1–3) e `comunidade` (4) | Ativo (BDD na Onda 1; código em equipe paralela) |
+| **Thiago Medeiros** | Operação comercial e notificações | 1. Gestão do catálogo<br>2. Gestão de pedidos<br>3. Dashboard de vendas<br>4. Avise-me | A confirmar na entrega dos artefatos | **Pendente** (ver [docs/thiago-pendente/README.md](docs/thiago-pendente/README.md)) |
+
+### 1.2 Escopo de Execução por Onda
+- **Onda 1 (BDD e Cucumber — Sem Código de Negócio)**:
+  - Cobre as **8 funcionalidades de Lucas Menezes e Ricardo Freitas**, materializadas em **9 arquivos `.feature`** em Gherkin (`# language: pt`) e **9 esqueletos `*StepDefinitions.java`** prontos para execução com Cucumber e Mockito nos módulos `dominio-adm`, `dominio-comunidade` e `dominio-loja`.
+  - **Restrição rígida da Onda 1**: É **proibido** implementar código de negócio (entidades de domínio, objetos de valor, serviços, repositórios, controladores ou telas) durante a Onda 1.
+- **Onda 2+ (Planejamento e Implementação de Código)**:
+  - Os agentes deste teamwork atuarão **APENAS nas 4 funcionalidades de Lucas Menezes** (`Perfil e amigos`, `Decks favoritos`, `Avaliação de cartas` e `Abertura preferida do anime One Piece`).
+  - As funcionalidades de **Ricardo Freitas** e **Thiago Medeiros** seguem sob responsabilidade de outras equipes, respeitando os contratos de contexto delimitado e a trava de padrões deste documento.
+
+---
+
+## 2. Stack Tecnológica Obrigatória
+
+Toda implementação no monorepo [tcghub/](tcghub/) deve utilizar exatamente a stack configurada no projeto:
+
+- **Linguagem e Runtime**: Java 25
+- **Backend / Framework**: Spring Boot `4.1.1` + Framework D5 (`1.0.0-SNAPSHOT`)
+- **Persistência**: JPA / ORM com banco de dados relacional (modelado em DBML `10.1.1`)
+- **Frontend**: React `19.3.0` + D5 Framework (camada de apresentação web), React Router `8.5.0`, TanStack Query `5.104.0`, React Hook Form `7.90.0`, React Bootstrap `2.10.10`, Bootstrap `5.3.8`
+- **Modelagem**: Context Mapper `6.12.0` (`.cml`) e DBML `10.1.1` (`.dbml`)
+- **Qualidade e Testes**: Cucumber `7.34.8`, Mockito `5.23.0`, JSpecify `1.0` (`@NullMarked` em todos os pacotes)
+- **Idioma**: Português do Brasil em toda documentação, modelos, código, testes e comentários (sempre que possível); **mensagens de commit em inglês** seguindo o padrão **Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, etc.).
+
+---
+
+## 3. Arquitetura: Clean Architecture + DDD (4 Níveis)
+
+O sistema adota **Clean Architecture** combinada com os **4 níveis do Domain-Driven Design (DDD)**, além de MDE, CQRS, SPI, BDD, programação defensiva, ORM e BFF:
+
+1. **DDD Preliminar**: Descrição do domínio com Linguagem Onipresente ([docs/linguagem-onipresente/](docs/linguagem-onipresente/README.md)), Mapa de História do Usuário ([docs/user-story-map/](docs/user-story-map/README.md)) e Protótipos de Alta Fidelidade ([docs/prototipos/](docs/prototipos/README.md)).
+2. **DDD Estratégico**: Delimitação dos subdomínios (`adm`, `comunidade`, `loja` e `compartilhado`) e relações `Downstream-Upstream` em Context Mapper ([docs/context-mapper/](docs/context-mapper/README.md) e `tcghub/docs/**/*.cml`).
+   - **Regra de isolamento**: Um conceito pertence ao módulo do seu subdomínio (`dominio-adm`, `dominio-comunidade`, `dominio-loja`). Dependências entre subdomínios **nunca** podem formar ciclos e acessos a dados de outro contexto devem ocorrer por contratos/SPIs, jamais diretamente no banco de outro subdomínio.
+3. **DDD Tático**: Agregados (`IAgregado`), Entidades, Objetos de Valor (`ObjetoValorStringAbstrato`, `ObjetoValorRegexAbstrato`, `IObjetoValor`), Serviços de Domínio (`AgregadoServicoAbstrato`) e Interfaces de Repositório (`IAgregadoRepositorio`) sem dependências de infraestrutura, com modelo de domínio rico (proibido modelo anêmico).
+4. **DDD Operacional**: Persistência JPA e projeções CQRS em `aplicacao` e `infraestrutura`, exposição BFF REST em `ui-backend`, apresentação React 19 + D5 em `ui-frontend` e programação defensiva estrita (conforme [tcghub/.agents/skills/programar-defensivamente/SKILL.md](tcghub/.agents/skills/programar-defensivamente/SKILL.md)).
+
+### Estrutura de Módulos Maven (`tcghub/pom.xml`)
+- `groupId`: `com.cesar.tgchub` | `artifactId`: `tcghub-pai` | `version`: `1.0.0-SNAPSHOT`
+- Módulos: `dominio-compartilhado`, `dominio-adm`, `dominio-comunidade`, `dominio-loja`, `aplicacao`, `infraestrutura`, `ui-backend`, `ui-frontend`.
+- Convenção de pacotes: `com.cesar.tgchub.tcghub.{dominio|aplicacao|infraestrutura|ui.backend}.<subdominio>.<agregado>[.spi]`, todos anotados com `@NullMarked`.
+
+---
+
+## 4. Trava Rígida de Padrões de Projeto GoF
+
+Para atender ao requisito mínimo de **4 padrões de projeto GoF distintos** (entre `Iterator`, `Decorator`, `Observer`, `Proxy`, `Strategy` e `Template Method`) **sem repetição entre integrantes**, vigora a regra inflexível:
+
+1. **SOMENTE 1 padrão GoF por integrante** (um integrante não pode acumular múltiplos padrões).
+2. **ZERO repetição** entre integrantes e camadas.
+3. **Bloqueio cruzado**:
+   - `Observer` é **EXCLUSIVO** de **Ricardo Freitas** e está **BLOQUEADO** para Lucas Menezes, Thiago Medeiros e camada compartilhada.
+   - `Proxy` é **EXCLUSIVO** de **Lucas Menezes** e está **BLOQUEADO** para Ricardo Freitas, Thiago Medeiros e camada compartilhada.
+   - `Template Method` é **EXCLUSIVO** da **camada compartilhada/transversal** (para atingir o mínimo de 4 padrões distintos com 3 integrantes mantendo 1 padrão por membro) e está **BLOQUEADO** para uso exclusivo individual de integrante.
+   - **Thiago Medeiros** possui **1 padrão reservado** (escolher exatamente 1 dentre `Strategy`, `Decorator` ou `Iterator` na entrega de seus artefatos).
+
+### Tabela de Trava de Padrões GoF
+
+| Integrante / Camada | Funcionalidade | Subdomínio | Padrão GoF Exclusivo | Justificativa Arquitetural |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ricardo Freitas** | Comprar produto | `loja` | **Observer** *(exclusivo)* | Desacopla reações a eventos do ciclo de vida do pedido (aprovação de pagamento, expiração de reserva em 30 min e eventos de timeline) sem acoplar diretamente estoque, pagamento e notificações. |
+| **Ricardo Freitas** | Recomendação de cartas | `loja` | **Observer** *(exclusivo)* | Atualiza o perfil de consumo do usuário de forma reativa a eventos de compra paga e reembolso confirmado, evitando contagem duplicada e acoplamento com o fluxo de checkout. |
+| **Ricardo Freitas** | Wishlist | `loja` | **Observer** *(exclusivo)* | Monitora transições de preço e reposição de estoque compatível (disparando alertas apenas na transição falso → verdadeiro) e sincroniza reservas de presente com eventos de pagamento/expiração do pedido. |
+| **Ricardo Freitas** | Minha coleção | `comunidade` | **Observer** *(exclusivo)* | Reage a atualizações de cotação de referência e mantém consistência de notificações/consultas entre acervo pessoal e avisos informativos na wishlist sem acoplamento bidirecional rígido. |
+| **Lucas Menezes** | Perfil e amigos | `comunidade` | **Proxy** *(exclusivo)* | Proxy de proteção/visibilidade controlando o acesso à visualização pública vs. privada do perfil e filtrando operações permitidas apenas ao proprietário autenticado ou entre amigos. |
+| **Lucas Menezes** | Decks favoritos | `comunidade` | **Proxy** *(exclusivo)* | Proxy de integração (sobre SPI de consulta ao Catálogo) que busca a composição atualizada de cartas e preços do deck sem acessar diretamente o banco do contexto de Catálogo (`loja`), atendendo à RN 3. |
+| **Lucas Menezes** | Avaliação de cartas | `comunidade` | **Proxy** *(exclusivo)* | Proxy de controle de acesso/elegibilidade que intercepta a avaliação para validar compra paga e não reembolsada (`CompraVerificada`), mantendo o selo de compra verificada e invalidando cômputo na média após reembolso. |
+| **Lucas Menezes** | Abertura preferida do anime One Piece | `comunidade` + `adm` | **Proxy** *(exclusivo)* | Proxy de privacidade e autorização que oculta a escolha do perfil público sem removê-la do cálculo anônimo do ranking Top 5 e media operações administrativas (`adm`) versus escolha comunitária (`comunidade`). |
+| **Thiago Medeiros** *(pendente)* | Gestão do catálogo, Gestão de pedidos, Dashboard de vendas, Avise-me | A confirmar | **1 padrão reservado** *(escolher entre `Strategy`, `Decorator` ou `Iterator`)* | A definir quando os artefatos forem entregues. `Observer`, `Proxy` e `Template Method` permanecem **bloqueados** para evitar repetição. |
+| **Camada Compartilhada / Transversal** | Fluxos estruturais de domínio, aplicação e infraestrutura D5 | `dominio-compartilhado`, `aplicacao`, `infraestrutura` | **Template Method** *(exclusivo transversal)* | Define o esqueleto invariante das operações de domínio, consulta e persistência (autorização → existência → invariantes/estado → persistência/conversão via `AgregadoServicoAbstrato`, `AgregadoRepositorioAbstrato` e `AgregadoAplicacaoRepositorioAbstrato`), delegando variações aos hooks das subclasses e assegurando 4 padrões GoF distintos no projeto. |
+
+---
+
+## 5. Workflow Obrigatório para Toda Funcionalidade
+
+> [!IMPORTANT]
+> **GATE OBRIGATÓRIO DE CONFIRMAÇÃO COM O USUÁRIO**: Antes de executar qualquer workflow de **planejamento** (Passo 1) para qualquer funcionalidade ou onda, os agentes devem **sempre verificar e solicitar confirmação explícita do usuário**. Nunca iniciar o Passo 1 automaticamente sem aval do usuário.
+
+Toda funcionalidade deve percorrer rigorosamente as **5 etapas** abaixo:
+
+| Etapa | Fase | Agentes Responsáveis | Artefatos e Skills Utilizados |
+| :--- | :--- | :--- | :--- |
+| **1** | **Planejar** *(somente após confirmação do usuário)* | `Architect` + `Designer` | `docs/linguagem-onipresente/`, `docs/user-story-map/`, `docs/prototipos/`, `tcghub/docs/S/funcionalidades/FXXX.md`, `tcghub/docs/S/projeto.cml`, `tcghub/docs/S/projeto.dbml`. Skills: [architect](.agents/skills/architect/SKILL.md), [designer](.agents/skills/designer/SKILL.md), `especificar-funcionalidade`, `projetar-software`, `validar-modelo`, `projetar-banco`. |
+| **2** | **Validar planejamento** | `Supervisor` | Auditoria de rastreabilidade (RNs ↔ `.feature` ↔ CML ↔ DBML), trava GoF, ausência de ciclos entre subdomínios, aderência ao D5 e Clean Architecture. Skill: [supervisor](.agents/skills/supervisor/SKILL.md). |
+| **3** | **Implementar** | `Backend Developer` + `Frontend Developer` | Domínio D5 (`dominio-S`), Step Definitions (`*StepDefinitions.java` + Mockito), JPA (`infraestrutura`), CQRS (`aplicacao`), BFF REST (`ui-backend`) e React 19 + D5 (`ui-frontend`). Skills: [backend-developer](.agents/skills/backend-developer/SKILL.md), [frontend-developer](.agents/skills/frontend-developer/SKILL.md) e skills D5 em `tcghub/.agents/skills/`. |
+| **4** | **Validar cenários BDD no Cucumber** | `QA Engineer` | Execução de `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja` em `tcghub/`, validação de 100% das RNs e cenários Gherkin sem pendências ou regressões. Skills: [qa-engineer](.agents/skills/qa-engineer/SKILL.md), `especificar-testes`, `desenvolver-testes`. |
+| **5** | **Auditar conformidade e relatar** | `Supervisor` | Auditoria final de código, `@NullMarked`, programação defensiva, trava GoF, testes e geração de relatório em `docs/reports/` + registro de interações com IA em `docs/ai-interactions/`. Skill: [supervisor](.agents/skills/supervisor/SKILL.md). |
+
+---
+
+## 6. Mapa de Skills, Documentação e Governança de IA
+
+### 6.1 Skills de Papéis (Raiz)
+- [architect/SKILL.md](.agents/skills/architect/SKILL.md) — Arquitetura Clean + DDD, CML, DBML e Trava GoF
+- [designer/SKILL.md](.agents/skills/designer/SKILL.md) — DDD Preliminar, User Story Map e Protótipos de Alta Fidelidade
+- [backend-developer/SKILL.md](.agents/skills/backend-developer/SKILL.md) — Java 25, Spring Boot 4.1.1, D5, JPA/ORM e Step Definitions
+- [frontend-developer/SKILL.md](.agents/skills/frontend-developer/SKILL.md) — React 19.3.0, D5 Frontend, TanStack Query e React Hook Form
+- [qa-engineer/SKILL.md](.agents/skills/qa-engineer/SKILL.md) — Especificação e validação BDD em Gherkin/Cucumber
+- [supervisor/SKILL.md](.agents/skills/supervisor/SKILL.md) — Validação de planejamento, auditoria de conformidade e relatórios
+- [repo-guardian/SKILL.md](.agents/skills/repo-guardian/SKILL.md) — Monitoramento do repositório, análise de impacto e commits incrementais
+
+### 6.2 Integração Contínua, Análise de Impacto e Commits Incrementais
+- O papel [repo-guardian](.agents/skills/repo-guardian/SKILL.md) monitora mudanças locais e de outras equipes (`git status`, `git diff`, `git fetch`, `git log`) para identificar impactos em `compartilhado`, `adm`, `comunidade`, contratos/SPIs, `.cml`, `.dbml` e nas 4 funcionalidades de Lucas Menezes.
+- Ao detectar impacto ou antes de consolidar uma etapa/onda, acionar os agentes responsáveis (`architect`, `qa-engineer`, `backend-developer`, `frontend-developer`, `supervisor`) para validar integridade e compatibilidade.
+- Todas as entregas devem ser registradas por meio de **commits simples, pequenos e incrementais em inglês seguindo o padrão Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, etc.), separando governança/skills, placeholders, `.feature`, `StepDefinitions`, código por camada/funcionalidade e relatórios, mantendo código, documentação, modelos e testes em português do Brasil.
+- É **proibido** commitar `**/target/`, `.DS_Store`, `*.log`, `.idea/` ou `*.iml` (configurados em [.gitignore](.gitignore)), mantidos `.agents/` e `docs/` sob versionamento. **Nunca** executar `git push` sem pedido explícito do usuário.
+
+### 6.3 Diretórios Reservados na Raiz (`/docs/`)
+- [docs/linguagem-onipresente/README.md](docs/linguagem-onipresente/README.md) — Glossário de Linguagem Onipresente
+- [docs/user-story-map/README.md](docs/user-story-map/README.md) — Mapa da História do Usuário
+- [docs/context-mapper/README.md](docs/context-mapper/README.md) — Índice de Context Mapper vinculando `tcghub/docs/*.cml`
+- [docs/prototipos/README.md](docs/prototipos/README.md) — Protótipos de alta fidelidade e fluxos de tela
+- [docs/thiago-pendente/README.md](docs/thiago-pendente/README.md) — Controle das 4 funcionalidades pendentes de Thiago Medeiros
+- `docs/reports/` — Relatórios de auditoria de conformidade gerados pelo `Supervisor`
+- `docs/ai-interactions/` — Registro obrigatório das interações com IAs utilizadas no projeto (requisito da disciplina)

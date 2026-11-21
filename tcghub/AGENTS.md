@@ -1,10 +1,13 @@
 # tcghub
 
-Projeto focado em cardgame
+Projeto focado em cardgame.
+
+> [!IMPORTANT]
+> Este módulo integra o repositório [Requisitos_de_Software](../AGENTS.md). Leia [../AGENTS.md](../AGENTS.md) para a governança multi-equipes, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
 
 ## Engenharia de software
 - MDE (Model-Driven Engineering)
-- DDD (Domain-Driven Design)
+- DDD (Domain-Driven Design — preliminar, estratégico, tático e operacional)
 - Evitar antipadrão modelo de domínio anêmico
 - CQRS (Command Query Responsibility Segregation)
 - Arquitetura limpa
@@ -33,7 +36,7 @@ Projeto focado em cardgame
 ## Subdomínios
 - adm (subdomínio principal): Administrador
 - comunidade (subdomínio de suporte): Comunidade
-- loja (subdomínio principal): Usuario 
+- loja (subdomínio principal): Usuario
 
 ## Maven
 - groupId: com.cesar.tgchub
@@ -61,7 +64,7 @@ Para cada subdomínio **S**:
 Os arquivos [compartilhado/projeto.cml](docs/compartilhado/projeto.cml) e [projeto.cml](docs/projeto.cml) complementam o modelo de projeto de software. Já o arquivo [projeto.dbml](docs/projeto.dbml) complementa o modelo do projeto de banco de dados.
 
 ## Idioma
-Todos os artefatos do projeto (documentação, modelos, código, comentários, etc.) devem ser escritos em português do Brasil, sempre que possível.
+Todos os artefatos do projeto (documentação, modelos, código, comentários, etc.) devem ser escritos em português do Brasil, sempre que possível. Mensagens de commit no Git devem ser escritas em **inglês** seguindo o padrão **Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, etc.).
 
 ## Pacotes
 O código de objetos de valor, entidades e serviço de um agregado **A** de um subdomínio **S** pertencem ao pacote com.cesar.tgchub.tcghub.dominio.**S**.**A**.
@@ -78,7 +81,29 @@ O controlador REST de **A** pertence ao pacote com.cesar.tgchub.tcghub.ui.backen
 
 Todos os pacotes são anotados com @NullMarked.
 
-## Processo de trabalho
+## Escopo e Trava de Padrões GoF
+- **Funcionalidades completas**: nenhuma funcionalidade pode ser apenas de leitura.
+- **Escopo Onda 1**: apenas BDD (`.feature` em português) e esqueletos `*StepDefinitions.java` para as 8 funcionalidades de **Lucas Menezes** e **Ricardo Freitas** (sem implementar código de negócio).
+- **Escopo Onda 2+**: este teamwork implementa **exclusivamente as 4 funcionalidades de Lucas Menezes** (`Perfil e amigos`, `Decks favoritos`, `Avaliação de cartas`, `Abertura preferida do anime One Piece`). Ricardo e Thiago (4 funcionalidades pendentes em [../docs/thiago-pendente/README.md](../docs/thiago-pendente/README.md)) seguem em outras equipes.
+- **Trava rígida GoF (1 padrão único por membro, mínimo 4 distintos no projeto, zero repetição)**:
+  - **Ricardo Freitas** → **Observer** *(exclusivo; bloqueado para Lucas, Thiago e camada compartilhada)* — Comprar produto (`loja`), Recomendação de cartas (`loja`), Wishlist (`loja`), Minha coleção (`comunidade`).
+  - **Lucas Menezes** → **Proxy** *(exclusivo; bloqueado para Ricardo e Thiago)* — Perfil e amigos (`comunidade`), Decks favoritos (`comunidade`), Avaliação de cartas (`comunidade`), Abertura preferida do anime One Piece (`comunidade` + `adm`).
+  - **Thiago Medeiros** *(pendente)* → **1 padrão reservado** (a escolher entre `Strategy`, `Decorator` ou `Iterator` quando os artefatos chegarem).
+  - **Camada Compartilhada / Transversal** → **Template Method** *(exclusivo transversal em `dominio-compartilhado`, `aplicacao` e `infraestrutura` sobre os fluxos base do D5)*.
+  - Ver tabela detalhada com justificativas em [../AGENTS.md](../AGENTS.md#4-trava-rígida-de-padrões-de-projeto-gof).
+
+## Workflow Obrigatório e Skills de Papéis
+Sempre **verificar e confirmar com o usuário antes de executar os workflows de planejamento** (Etapa 1). Toda funcionalidade segue as 5 etapas governadas pelas skills em [../.agents/skills/](../.agents/skills/):
+
+1. **Planejar** ([architect](../.agents/skills/architect/SKILL.md) + [designer](../.agents/skills/designer/SKILL.md)) — após confirmação do usuário
+2. **Validar planejamento** ([supervisor](../.agents/skills/supervisor/SKILL.md))
+3. **Implementar** ([backend-developer](../.agents/skills/backend-developer/SKILL.md) + [frontend-developer](../.agents/skills/frontend-developer/SKILL.md))
+4. **Validar cenários BDD no Cucumber** ([qa-engineer](../.agents/skills/qa-engineer/SKILL.md))
+5. **Auditar conformidade e relatar** ([supervisor](../.agents/skills/supervisor/SKILL.md))
+
+Além das 5 etapas, o papel [repo-guardian](../.agents/skills/repo-guardian/SKILL.md) acompanha continuamente mudanças no repositório, analisa impactos sobre `compartilhado`, `adm`, `comunidade` e as funcionalidades de Lucas Menezes, e consolida entregas em **commits pequenos e incrementais em inglês no padrão Conventional Commits** (mantendo código, documentação, modelos e testes em português do Brasil, sem incluir `target/` e sem executar `git push` sem autorização explícita do usuário).
+
+## Processo de trabalho (Skills Técnicas D5)
 1) [Especificar funcionalidade](.agents/skills/especificar-funcionalidade/SKILL.md)
 2) [Especificar testes](.agents/skills/especificar-testes/SKILL.md)
 3) [Projetar software](.agents/skills/projetar-software/SKILL.md)
@@ -90,4 +115,5 @@ Todos os pacotes são anotados com @NullMarked.
 9) [Desenvolver frontend](.agents/skills/desenvolver-frontend/SKILL.md)
 
 ## Execução
-mvn spring-boot:test-run -pl ui-backend
+- Subir aplicação completa (BFF + frontend): `mvn spring-boot:test-run -pl ui-backend`
+- Executar suítes BDD/Cucumber dos módulos de domínio: `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja`
