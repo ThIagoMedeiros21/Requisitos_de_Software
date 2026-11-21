@@ -1,12 +1,355 @@
 import "../compartilhado/projeto.cml"
+import "../adm/projeto.cml"
+import "../comunidade/projeto.cml"
 
 ContextMap {
-	contains loja, compartilhado
+	contains loja, comunidade, adm, compartilhado
 
 	loja Downstream-Upstream compartilhado
+	loja Downstream-Upstream adm
+	loja Downstream-Upstream comunidade
 }
 
 BoundedContext loja implements loja {
 	Module loja {
+		// ==================== RICARDO FREITAS (Padrao GoF exclusivo: Observer) ====================
+		Aggregate Carrinho {
+			Entity Carrinho {
+				aggregateRoot
+
+				-CarrinhoIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-List<ItemCarrinho> itens
+
+				def void adicionarProduto(@ProdutoIdentificador produto, int quantidade);
+				def void alterarQuantidade(@ProdutoIdentificador produto, int quantidade);
+				def void removerProduto(@ProdutoIdentificador produto);
+
+				Repository CarrinhoRepository {
+					@Carrinho incluir(@Carrinho agregado);
+					boolean existePorIdentificador(@CarrinhoIdentificador identificador);
+					@Carrinho buscarPorIdentificador(@CarrinhoIdentificador identificador);
+					void alterar(@Carrinho agregado);
+					void excluir(@CarrinhoIdentificador identificador);
+					@Carrinho buscarPorUsuario(@UsuarioIdentificador usuario);
+				}
+			}
+
+			ValueObject CarrinhoIdentificador {
+				String valor
+			}
+
+			ValueObject ItemCarrinho {
+				-ProdutoIdentificador produto
+				int quantidade
+			}
+		}
+
+		Aggregate Pedido {
+			Entity Pedido {
+				aggregateRoot
+
+				-PedidoIdentificador id key
+				-UsuarioIdentificador comprador
+				-UsuarioIdentificador destinatario nullable
+				-List<ItemPedido> itens
+				-EnderecoEntrega enderecoEntrega
+				-TarifaFrete frete
+				-Envio envio nullable
+				-List<TentativaPagamento> tentativas
+				-TentativaPagamentoIdentificador tentativaVigente nullable
+				String tipo
+				String status
+				BigDecimal valorTotal
+				Date criadoEm
+				Date expiraEm
+				Date pagoEm nullable
+
+				def BigDecimal calcularSubtotal();
+				def BigDecimal calcularDesconto(String metodo);
+				def void calcularTotal(String metodo);
+				def void iniciarTentativa(String metodo);
+				def void confirmarPagamento(@TentativaPagamentoIdentificador tentativa, BigDecimal valor, String metodo);
+				def void cancelar();
+				def boolean estaExpirado();
+
+				Repository PedidoRepository {
+					@Pedido incluir(@Pedido agregado);
+					boolean existePorIdentificador(@PedidoIdentificador id);
+					@Pedido buscarPorIdentificador(@PedidoIdentificador id);
+					void alterar(@Pedido agregado);
+					void excluir(@PedidoIdentificador id);
+					List<@Pedido> buscarPorUsuario(@UsuarioIdentificador usuario);
+					List<@Pedido> buscarPendentesExpirados();
+				}
+			}
+
+			ValueObject TentativaPagamento {
+				-TentativaPagamentoIdentificador id
+				String metodo
+				BigDecimal valor
+				String status
+				String referenciaExterna nullable
+				Date criadoEm
+				Date finalizadoEm nullable
+			}
+
+			ValueObject TentativaPagamentoIdentificador {
+				String valor
+			}
+
+			ValueObject ItemPedido {
+				-ProdutoIdentificador produto
+				int quantidade
+				BigDecimal precoUnitario
+			}
+
+			ValueObject EnderecoEntrega {
+				String cep
+				String logradouro
+				String numero
+				String complemento nullable
+				String bairro
+				String cidade
+				String uf
+			}
+
+			ValueObject TarifaFrete {
+				String modalidade
+				BigDecimal valor
+				int prazoDias
+			}
+
+			ValueObject Envio {
+				String status
+				String codigoRastreio nullable
+				Date postadoEm nullable
+				Date entregueEm nullable
+			}
+
+			Service FreteServico {
+				@TarifaFrete calcular(String cep, int peso, String modalidade);
+			}
+
+			Service CompraServico {
+				@Pedido criarPedido(@UsuarioIdentificador comprador, @EnderecoEntrega endereco, String modalidade);
+				void confirmarPagamento(@PedidoIdentificador pedido, @TentativaPagamentoIdentificador tentativa, BigDecimal valor, String metodo);
+				void cancelarPedido(@PedidoIdentificador pedido);
+				void expirarPedidosPendentes();
+			}
+
+			// Padrao GoF Observer (exclusivo de Ricardo): publica eventos do ciclo de vida do pedido para observadores
+			Service PedidoEventoObserver {
+				void notificarPedidoCriado(@PedidoIdentificador pedido);
+				void notificarPagamentoAprovado(@PedidoIdentificador pedido);
+				void notificarPedidoCanceladoOuExpirado(@PedidoIdentificador pedido);
+				void notificarPedidoReembolsado(@PedidoIdentificador pedido);
+			}
+		}
+
+		Aggregate DisponibilidadeProduto {
+			Entity DisponibilidadeProduto {
+				aggregateRoot
+
+				-DisponibilidadeProdutoIdentificador identificador key
+				-ProdutoIdentificador produto
+				int quantidadeTotal
+				-List<ReservaEstoque> reservas
+
+				def int quantidadeDisponivel();
+				def void reservar(@PedidoIdentificador pedido, int quantidade, Date expiraEm);
+				def void efetivarReserva(@PedidoIdentificador pedido);
+				def void liberarReserva(@PedidoIdentificador pedido);
+
+				Repository DisponibilidadeProdutoRepository {
+					@DisponibilidadeProduto incluir(@DisponibilidadeProduto agregado);
+					boolean existePorIdentificador(@DisponibilidadeProdutoIdentificador identificador);
+					@DisponibilidadeProduto buscarPorIdentificador(@DisponibilidadeProdutoIdentificador identificador);
+					void alterar(@DisponibilidadeProduto agregado);
+					void excluir(@DisponibilidadeProdutoIdentificador identificador);
+					@DisponibilidadeProduto buscarPorProduto(@ProdutoIdentificador produto);
+				}
+			}
+
+			ValueObject DisponibilidadeProdutoIdentificador {
+				String valor
+			}
+
+			ValueObject ReservaEstoque {
+				-PedidoIdentificador pedido
+				int quantidade
+				String status
+				Date expiraEm
+			}
+
+			// Padrao GoF Observer (exclusivo de Ricardo): observa eventos de pedido e notifica reposicao/preco
+			Service DisponibilidadeEstoqueObserver {
+				void aoCriarPedido(@PedidoIdentificador pedido);
+				void aoAprovarPagamento(@PedidoIdentificador pedido);
+				void aoCancelarOuExpirarPedido(@PedidoIdentificador pedido);
+			}
+		}
+
+		Aggregate PreferenciasUsuario {
+			Entity PreferenciasUsuario {
+				aggregateRoot
+
+				-PreferenciasUsuarioIdentificador identificador key
+				-UsuarioIdentificador usuario
+				-List<ColecaoIdentificador> colecoes
+				-List<CorId> cores
+				-List<TipoCartaId> tipos
+				-List<RaridadeId> raridades
+				-FaixaPreco faixaPreco nullable
+
+				def void adicionarColecao(@ColecaoIdentificador colecao);
+				def void removerColecao(@ColecaoIdentificador colecao);
+				def void adicionarCor(@CorId cor);
+				def void removerCor(@CorId cor);
+				def void adicionarTipo(@TipoCartaId tipo);
+				def void removerTipo(@TipoCartaId tipo);
+				def void adicionarRaridade(@RaridadeId raridade);
+				def void removerRaridade(@RaridadeId raridade);
+				def void definirFaixaPreco(@FaixaPreco faixa);
+				def void removerFaixaPreco();
+
+				Repository PreferenciasUsuarioRepository {
+					@PreferenciasUsuario incluir(@PreferenciasUsuario agregado);
+					boolean existePorIdentificador(@PreferenciasUsuarioIdentificador identificador);
+					@PreferenciasUsuario buscarPorIdentificador(@PreferenciasUsuarioIdentificador identificador);
+					void alterar(@PreferenciasUsuario agregado);
+					void excluir(@PreferenciasUsuarioIdentificador identificador);
+					@PreferenciasUsuario buscarPorUsuario(@UsuarioIdentificador usuario);
+				}
+			}
+
+			ValueObject PreferenciasUsuarioIdentificador {
+				String valor
+			}
+
+			ValueObject FaixaPreco {
+				BigDecimal minimo
+				BigDecimal maximo
+			}
+
+			ValueObject CorId {
+				String valor
+			}
+
+			ValueObject TipoCartaId {
+				String valor
+			}
+
+			ValueObject RaridadeId {
+				String valor
+			}
+
+			ValueObject CartaPopular {
+				-CartaIdentificador carta
+				int posicao
+				boolean ativo
+			}
+
+			ValueObject Recomendacao {
+				-CartaIdentificador carta
+				-ProdutoIdentificador produto
+				BigDecimal pontuacao nullable
+			}
+
+			Service RecomendacaoServico {
+				BigDecimal calcularCompatibilidade(@UsuarioIdentificador usuario, @CartaIdentificador carta);
+				List<@Recomendacao> recomendar(@UsuarioIdentificador usuario);
+				List<@Recomendacao> recomendarPopulares();
+				List<@CartaPopular> listarPopulares();
+			}
+
+			// Padrao GoF Observer (exclusivo de Ricardo): atualiza perfil de consumo a partir de pagamento/reembolso
+			Service RecomendacaoPerfilObserver {
+				void aoConfirmarCompra(@UsuarioIdentificador usuario, @PedidoIdentificador pedido);
+				void aoConfirmarReembolso(@UsuarioIdentificador usuario, @PedidoIdentificador pedido);
+			}
+		}
+
+		Aggregate Wishlist {
+			Entity Wishlist {
+				aggregateRoot
+
+				-WishlistIdentificador identificador key
+				-UsuarioIdentificador usuario
+				boolean publica
+				String tokenPublico nullable
+				-List<ItemWishlist> itens
+
+				def void adicionarItem(@CartaIdentificador carta, String condicao, int quantidade);
+				def void removerItem(@ItemWishlistIdentificador item);
+				def void alterarQuantidade(@ItemWishlistIdentificador item, int quantidade);
+				def void habilitarCompartilhamento();
+				def void desabilitarCompartilhamento();
+
+				Repository WishlistRepository {
+					@Wishlist incluir(@Wishlist agregado);
+					boolean existePorIdentificador(@WishlistIdentificador identificador);
+					@Wishlist buscarPorIdentificador(@WishlistIdentificador identificador);
+					void alterar(@Wishlist agregado);
+					void excluir(@WishlistIdentificador identificador);
+					@Wishlist buscarPorUsuario(@UsuarioIdentificador usuario);
+					@Wishlist buscarPorToken(String token);
+				}
+			}
+
+			ValueObject WishlistIdentificador {
+				String valor
+			}
+
+			ValueObject ItemWishlist {
+				-ItemWishlistIdentificador id
+				-CartaIdentificador carta
+				String condicaoDesejada
+				int quantidadeDesejada
+				BigDecimal precoAlvo nullable
+				boolean alertaPrecoAtivo
+				boolean alertaEstoqueAtivo
+				boolean precoCondicaoAtendida
+				boolean estoqueCondicaoAtendida
+				-List<ReservaPresente> reservas
+				-List<NotificacaoWishlist> notificacoes
+			}
+
+			ValueObject ItemWishlistIdentificador {
+				String valor
+			}
+
+			ValueObject ReservaPresente {
+				-PedidoIdentificador pedido
+				-ProdutoIdentificador produto
+				int quantidade
+				String status
+			}
+
+			ValueObject NotificacaoWishlist {
+				String tipo
+				String mensagem
+				Date criadoEm
+				Date lidaEm nullable
+			}
+
+			Service WishlistServico {
+				void verificarAlertaPreco(@ItemWishlistIdentificador item);
+				void verificarAlertaEstoque(@ItemWishlistIdentificador item);
+				int consultarQuantidadePossuida(@UsuarioIdentificador usuario, @CartaIdentificador carta);
+			}
+
+			Service PresenteServico {
+				@Pedido comprarPresente(String token, @ItemWishlistIdentificador item, @UsuarioIdentificador comprador, @ProdutoIdentificador produto, int quantidade, String modalidadeFrete);
+			}
+
+			// Padrao GoF Observer (exclusivo de Ricardo): observa preco/estoque e ciclo de pedido de presente
+			Service WishlistAlertaObserver {
+				void aoAlterarPrecoProduto(@ProdutoIdentificador produto, BigDecimal novoPreco);
+				void aoAlterarDisponibilidadeProduto(@ProdutoIdentificador produto, int estoqueDisponivel);
+				void aoConfirmarPagamentoPresente(@PedidoIdentificador pedido);
+				void aoCancelarOuExpirarPresente(@PedidoIdentificador pedido);
+			}
+		}
 	}
 }

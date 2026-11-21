@@ -8,6 +8,7 @@ ContextMap {
 
 BoundedContext adm implements adm {
 	Module adm {
+		// ==================== LUCAS MENEZES (F001 - Gestao de Aberturas) ====================
 		Aggregate Abertura {
 			Entity Abertura {
 				aggregateRoot
@@ -43,6 +44,891 @@ BoundedContext adm implements adm {
 				void excluir(@AberturaIdentificador identificador);
 				void inativar(@AberturaIdentificador identificador);
 				void reativar(@AberturaIdentificador identificador);
+			}
+		}
+
+		// ==================== THIAGO MEDEIROS (Catalogo, Pedidos, Dashboard, Avise-me) ====================
+		// Nota: Padrao GoF de Thiago reservado entre Strategy, Decorator ou Iterator (PROIBIDO Observer e Proxy).
+		Aggregate Admin {
+			Entity Admin {
+				aggregateRoot
+
+				-AdminIdentificador identificador key
+				String nome
+				String enderecoEmail
+				boolean ativo
+
+				Repository AdminRepository {
+					@Admin incluir(@Admin agregado);
+					boolean existePorIdentificador(@AdminIdentificador identificador);
+					@Admin buscarPorIdentificador(@AdminIdentificador identificador);
+					void alterar(@Admin agregado);
+					void excluir(@AdminIdentificador identificador);
+					boolean existeAtivo(@AdminIdentificador identificador);
+				}
+			}
+
+			ValueObject AdminIdentificador {
+				String valor
+			}
+		}
+
+		Aggregate Colecao {
+			Entity Colecao {
+				aggregateRoot
+
+				-ColecaoIdentificador identificador key
+				String codigo
+				String nome
+				Date lancamento
+
+				Repository ColecaoRepository {
+					@Colecao incluir(@Colecao agregado);
+					boolean existePorIdentificador(@ColecaoIdentificador identificador);
+					@Colecao buscarPorIdentificador(@ColecaoIdentificador identificador);
+					void alterar(@Colecao agregado);
+					void excluir(@ColecaoIdentificador identificador);
+					boolean existeCodigo(String codigo);
+					boolean possuiVinculos(@ColecaoIdentificador identificador);
+					List<@Colecao> listar();
+				}
+			}
+
+			ValueObject ColecaoIdentificador {
+				String valor
+			}
+
+			ValueObject ColecaoCadastradaRegistro {
+				-ColecaoIdentificador colecao
+				String codigo
+				String nome
+				Date data
+			}
+
+			Service ColecaoServico {
+				@ColecaoIdentificador cadastrar(String codigo, String nome, Date lancamento, @AdminIdentificador admin);
+				void editar(@ColecaoIdentificador colecao, String nome, Date lancamento, @AdminIdentificador admin);
+				void excluir(@ColecaoIdentificador colecao, @AdminIdentificador admin);
+				List<@Colecao> listar();
+			}
+		}
+
+		Aggregate Carta {
+			Entity Carta {
+				aggregateRoot
+
+				-CodigoCarta codigo key
+				String nome
+				-TipoCarta tipo
+				-Raridade raridade
+				-List<CorCarta> cores
+				-ColecaoIdentificador colecao
+
+				def boolean ehLider();
+
+				Repository CartaRepository {
+					@Carta incluir(@Carta agregado);
+					boolean existePorIdentificador(@CodigoCarta codigo);
+					@Carta buscarPorIdentificador(@CodigoCarta codigo);
+					void alterar(@Carta agregado);
+					void excluir(@CodigoCarta codigo);
+					List<@Carta> buscarPorNome(String nome);
+					List<@Carta> listarPorColecao(@ColecaoIdentificador colecao);
+				}
+			}
+
+			ValueObject CodigoCarta {
+				String valor
+			}
+
+			enum TipoCarta {
+				LIDER, PERSONAGEM, EVENTO, PALCO, DON
+			}
+
+			enum Raridade {
+				COMUM, INCOMUM, RARA, SUPER_RARA, SECRET_RARA, LIDER, ESPECIAL, PROMO
+			}
+
+			enum CorCarta {
+				VERMELHO, VERDE, AZUL, ROXO, PRETO, AMARELO
+			}
+
+			Service CartaServico {
+				void cadastrar(@Carta carta, @AdminIdentificador admin);
+				void editar(@CodigoCarta codigo, String nome, @AdminIdentificador admin);
+				@Carta buscarPorCodigo(@CodigoCarta codigo);
+				List<@Carta> buscarPorNome(String nome);
+			}
+		}
+
+		Aggregate Deck {
+			Entity Deck {
+				aggregateRoot
+
+				-DeckId id key
+				String nome
+				-CodigoCarta lider
+				-List<DeckComposicao> composicao
+				int quantidadeDon
+
+				def void adicionarCarta(@CodigoCarta carta, int quantidade);
+				def void removerCarta(@CodigoCarta carta);
+				def boolean composicaoValida();
+
+				Repository DeckRepository {
+					@Deck incluir(@Deck agregado);
+					boolean existePorIdentificador(@DeckId id);
+					@Deck buscarPorIdentificador(@DeckId id);
+					void alterar(@Deck agregado);
+					void excluir(@DeckId id);
+					List<@Deck> listar();
+					int somarQuantidades(@DeckId id);
+					int contarCopias(@DeckId id, @CodigoCarta carta);
+					List<@CodigoCarta> cartasAcimaDoLimite(@DeckId id, int limite);
+				}
+			}
+
+			ValueObject DeckComposicao {
+				-CodigoCarta carta
+				int quantidade
+			}
+
+			ValueObject DeckId {
+				String valor
+			}
+
+			Service DeckServico {
+				@DeckId criar(String nome, @CodigoCarta lider, @AdminIdentificador admin);
+				void adicionarCarta(@DeckId deck, @CodigoCarta carta, int quantidade, @AdminIdentificador admin);
+				void removerCarta(@DeckId deck, @CodigoCarta carta, @AdminIdentificador admin);
+				boolean validarComposicao(@DeckId deck);
+			}
+		}
+
+		Aggregate Produto {
+			Entity Produto {
+				aggregateRoot
+
+				-ProdutoId id key
+				String nome
+				-TipoProduto tipo
+				-Acabamento acabamento nullable
+				BigDecimal preco
+				BigDecimal precoMinimo
+				int estoque
+				int estoqueReservado
+				Date reservaExpiraEm nullable
+				-VisibilidadeProduto visibilidade
+				-ColecaoIdentificador colecao
+				-CodigoCarta carta nullable
+				-DeckId deck nullable
+				-List<HistoricoPreco> historicoPrecos
+				-List<AjusteEstoque> ajustesEstoque
+
+				def void alterarPreco(BigDecimal novoPreco, @AdminIdentificador admin);
+				def void ajustarEstoque(int novoEstoque, @MotivoAjuste motivo, @AdminIdentificador admin);
+				def String esgotar(@MotivoAjuste motivo, boolean habilitarAviseMe, @AdminIdentificador admin);
+				def void reporEstoque(int quantidade, int reservadaFila, @AdminIdentificador admin);
+				def void baixarPorVenda(int quantidade);
+				def void devolverEstoque(int quantidade);
+				def void ocultar(@AdminIdentificador admin);
+				def void reexibir(@AdminIdentificador admin);
+				def boolean disponivelParaCompra();
+
+				Repository ProdutoRepository {
+					@Produto incluir(@Produto agregado);
+					boolean existePorIdentificador(@ProdutoId id);
+					@Produto buscarPorIdentificador(@ProdutoId id);
+					void alterar(@Produto agregado);
+					void excluir(@ProdutoId id);
+					List<@Produto> listar(@FiltroProduto filtro, int pagina, int tamanho);
+					int contar(@FiltroProduto filtro);
+					List<@HistoricoPreco> listarHistoricoPreco(@ProdutoId id);
+					List<@AjusteEstoque> listarAjustesEstoque(@ProdutoId id);
+					int lerEstoque(@ProdutoId id);
+					List<@Produto> listarComReservaExpirada(Date agora);
+				}
+			}
+
+			ValueObject HistoricoPreco {
+				BigDecimal precoAnterior
+				BigDecimal precoNovo
+				Date dataAlteracao
+				-AdminIdentificador alteradoPor
+			}
+
+			ValueObject AjusteEstoque {
+				String codigoAuditoria
+				-TipoAjuste tipo
+				int quantidadeAnterior
+				int quantidadeNova
+				-MotivoAjuste motivo nullable
+				-AdminIdentificador admin nullable
+				Date data
+			}
+
+			ValueObject ProdutoId {
+				String valor
+			}
+
+			ValueObject NovoProduto {
+				-TipoProduto tipo
+				String nome
+				-CodigoCarta carta nullable
+				-DeckId deck nullable
+				-ColecaoIdentificador colecao
+				-Acabamento acabamento nullable
+				int estoqueInicial
+				BigDecimal preco
+				BigDecimal precoMinimo
+				-VisibilidadeProduto visibilidadeInicial
+			}
+
+			ValueObject FiltroProduto {
+				String busca nullable
+				-ColecaoIdentificador colecao nullable
+				-TipoProduto tipo nullable
+				-VisibilidadeProduto visibilidade nullable
+			}
+
+			ValueObject ItemMovimentado {
+				-ProdutoId produto
+				int quantidade
+			}
+
+			enum TipoProduto {
+				CARTA_AVULSA, BOOSTER_BOX, DECK
+			}
+
+			enum Acabamento {
+				STANDARD, FOIL, FOIL_TEXTURIZADO, PARALELA, PARALELA_MANGA, ALT_ART
+			}
+
+			enum VisibilidadeProduto {
+				ATIVO, ESGOTADO, OCULTO
+			}
+
+			enum TipoAjuste {
+				CADASTRO, REPOSICAO, AJUSTE_MANUAL, ESGOTAMENTO, VENDA, DEVOLUCAO
+			}
+
+			enum MotivoAjuste {
+				ESTOQUE_FISICO_ZERADO, RESERVA_MANUTENCAO_LOTE, DEFEITO_AVARIA, OUTRO
+			}
+
+			Service ProdutoServico {
+				@ProdutoId cadastrar(@NovoProduto dados, @AdminIdentificador admin);
+				List<@Produto> listar(@FiltroProduto filtro, int pagina, int tamanho);
+				void alterarPreco(@ProdutoId produto, BigDecimal novoPreco, @AdminIdentificador admin);
+				List<@HistoricoPreco> historicoPreco(@ProdutoId produto);
+				void ajustarEstoque(@ProdutoId produto, int novoEstoque, @MotivoAjuste motivo, @AdminIdentificador admin);
+				String esgotar(@ProdutoId produto, @MotivoAjuste motivo, boolean habilitarAviseMe, @AdminIdentificador admin);
+				void reporEstoque(@ProdutoId produto, int quantidade, int reservadaFila, @AdminIdentificador admin);
+				List<@AjusteEstoque> auditarLog(@ProdutoId produto);
+				void ocultar(@ProdutoId produto, @AdminIdentificador admin);
+				void reexibir(@ProdutoId produto, @AdminIdentificador admin);
+				void excluir(@ProdutoId produto, @AdminIdentificador admin);
+			}
+
+			Service EstoqueServico {
+				void baixarPorVenda(List<@ItemMovimentado> itens);
+				void devolverEstoque(List<@ItemMovimentado> itens);
+				void liberarReservasExpiradas();
+			}
+
+			Service VendasGateway {
+				boolean produtoJaVendido(@ProdutoId produto);
+			}
+		}
+
+		Aggregate PedidoAdm {
+			Entity PedidoAdm {
+				aggregateRoot
+
+				-PedidoAdmIdentificador id key
+				-ClienteResumo cliente
+				Date dataCriacao
+				BigDecimal subtotal
+				BigDecimal frete
+				BigDecimal valorTotal
+				-StatusPedidoAdm status
+				-EnderecoEntregaAdm enderecoEntrega
+				-List<ItemPedidoAdm> itens
+				-PagamentoAdm pagamento
+				-Custodia custodia nullable
+				-EnvioAdm envio nullable
+				Date prazoDespacho nullable
+
+				def void confirmarPagamento(String transacaoId);
+				def void registrarFalhaPagamento(String motivo);
+				def void marcarComoEnviado(@DadosDespacho despacho, @AdminIdentificador admin);
+				def void registrarMovimentacao(@EventoRastreio evento);
+				def void marcarComoEntregue(@ComprovanteEntrega comprovante, @AdminIdentificador admin);
+				def void cancelar(String motivo, @AdminIdentificador admin);
+				def void reembolsar(String motivo, @AdminIdentificador admin);
+				def void registrarEstorno(String transacaoId);
+
+				Repository PedidoAdmRepository {
+					@PedidoAdm incluir(@PedidoAdm agregado);
+					boolean existePorIdentificador(@PedidoAdmIdentificador id);
+					@PedidoAdm buscarPorIdentificador(@PedidoAdmIdentificador id);
+					void alterar(@PedidoAdm agregado);
+					void excluir(@PedidoAdmIdentificador id);
+					List<@PedidoAdm> listar(@FiltroPedidoAdm filtro, int pagina, int tamanho);
+					int contarPorStatus(@StatusPedidoAdm status, Date inicio, Date fim);
+					@StatusPedidoAdm lerStatus(@PedidoAdmIdentificador id);
+					@PedidoAdm buscarPorTransacao(String transacaoId);
+					List<@PedidoAdm> listarForaDoSla(Date agora);
+					boolean existeItemComProduto(@ProdutoId produto);
+				}
+			}
+
+			ValueObject PedidoAdmIdentificador {
+				String valor
+			}
+
+			ValueObject ClienteId {
+				String valor
+			}
+
+			ValueObject ItemPedidoAdm {
+				-ProdutoId produto
+				String nomeProduto
+				int quantidade
+				BigDecimal precoUnitario
+				BigDecimal subtotal
+			}
+
+			ValueObject PagamentoAdm {
+				String transacaoId
+				-MetodoPagamento metodo
+				int parcelas
+				BigDecimal valor
+				-StatusPagamento status
+				Date dataPagamento nullable
+			}
+
+			ValueObject Custodia {
+				BigDecimal valorRetido
+				-StatusCustodia status
+				Date dataLiberacao nullable
+				String carteiraDestino nullable
+			}
+
+			ValueObject EnvioAdm {
+				String transportadora
+				String codigoRastreio
+				Date dataDespacho
+				Date previsaoEntrega
+				-List<EventoRastreio> historico
+				-ComprovanteEntrega comprovante nullable
+			}
+
+			ValueObject DadosDespacho {
+				String transportadora
+				String codigoRastreio
+				Date dataDespacho
+				Date previsaoEntrega
+				boolean notificarComprador
+			}
+
+			ValueObject EventoRastreio {
+				Date dataHora
+				String descricao
+				String local
+			}
+
+			ValueObject ComprovanteEntrega {
+				String recebidoPor
+				Date dataHoraEntrega
+				String assinaturaDigital nullable
+			}
+
+			ValueObject EnderecoEntregaAdm {
+				String destinatario
+				String logradouro
+				String numero
+				String complemento nullable
+				String bairro
+				String cidade
+				String uf
+				String cep
+			}
+
+			ValueObject ClienteResumo {
+				-ClienteId id
+				String nome
+				String enderecoEmail
+				String telefone nullable
+			}
+
+			ValueObject FiltroPedidoAdm {
+				-StatusPedidoAdm status nullable
+				Date inicio nullable
+				Date fim nullable
+				String busca nullable
+			}
+
+			enum StatusPedidoAdm {
+				CRIADO, PAGAMENTO_FALHOU, PAGO, ENVIADO, ENTREGUE, CANCELADO, REEMBOLSADO, ESTORNADO
+			}
+
+			enum StatusPagamento {
+				PENDENTE, APROVADO, FALHOU, REEMBOLSADO, REVOGADO
+			}
+
+			enum MetodoPagamento {
+				PIX, CARTAO_CREDITO, BOLETO
+			}
+
+			enum StatusCustodia {
+				RETIDA, LIBERADA, DEVOLVIDA
+			}
+
+			Service GestaoPedidoServico {
+				@PedidoAdm detalhar(@PedidoAdmIdentificador pedido);
+				List<@PedidoAdm> listar(@FiltroPedidoAdm filtro, int pagina, int tamanho);
+				void marcarComoEnviado(@PedidoAdmIdentificador pedido, @DadosDespacho despacho, @AdminIdentificador admin);
+				void atualizarRastreamento(@PedidoAdmIdentificador pedido, @EventoRastreio evento, @AdminIdentificador admin);
+				void marcarComoEntregue(@PedidoAdmIdentificador pedido, @ComprovanteEntrega comprovante, @AdminIdentificador admin);
+				void cancelar(@PedidoAdmIdentificador pedido, String motivo, @AdminIdentificador admin);
+				void reembolsar(@PedidoAdmIdentificador pedido, String motivo, @AdminIdentificador admin);
+				List<@PedidoAdm> foraDoSla();
+			}
+
+			Service PagamentoAdmServico {
+				void confirmarPagamento(@PedidoAdmIdentificador pedido, String transacaoId);
+				void registrarFalha(@PedidoAdmIdentificador pedido, String motivo);
+				void registrarTransacaoRevogada(String transacaoId);
+			}
+
+			Service ConsultaVendaServico {
+				boolean produtoJaVendido(@ProdutoId produto);
+			}
+		}
+
+		Aggregate EventoNegocio {
+			Entity EventoNegocio {
+				aggregateRoot
+
+				-EventoId id key
+				String eventoOrigemId
+				-TipoEvento tipo
+				Date dataOcorrencia
+				BigDecimal valor nullable
+				int quantidade
+				BigDecimal precoNovo nullable
+				-PedidoAdmIdentificador pedido nullable
+				-ProdutoId produto nullable
+				-ColecaoIdentificador colecao nullable
+				-CategoriaProduto categoria nullable
+
+				Repository EventoNegocioRepository {
+					@EventoNegocio incluir(@EventoNegocio agregado);
+					boolean existePorIdentificador(@EventoId id);
+					@EventoNegocio buscarPorIdentificador(@EventoId id);
+					void alterar(@EventoNegocio agregado);
+					void excluir(@EventoId id);
+					List<@ReceitaDiaria> receitaPorData(@FiltroDashboard filtro);
+					List<@FaturamentoSemanal> faturamentoSemanal(@FiltroDashboard filtro);
+					BigDecimal somarPorTipo(@TipoEvento tipo, @FiltroDashboard filtro);
+					int contarPedidosPorTipo(@TipoEvento tipo, @FiltroDashboard filtro);
+					List<@ItemRanking> rankingProdutos(@FiltroDashboard filtro, @Periodo periodoComparacao, int limite);
+					List<@VendasPorColecao> vendasPorColecao(@FiltroDashboard filtro);
+					List<@DistribuicaoCategoria> distribuicaoPorCategoria(@FiltroDashboard filtro);
+					List<@PontoPreco> historicoPreco(@ProdutoId produto, @Periodo periodo);
+					List<@EventoNegocio> filtrar(@FiltroDashboard filtro);
+					boolean existePorOrigem(String eventoOrigemId);
+					void registrarEmLote(List<@EventoNegocio> eventos);
+				}
+			}
+
+			ValueObject EventoId {
+				String valor
+			}
+
+			enum TipoEvento {
+				VENDA, REEMBOLSO, FALHA_PAGAMENTO, TRANSACAO_REVOGADA, PRECO_ALTERADO
+			}
+
+			enum CategoriaProduto {
+				CARTA_AVULSA, BOOSTER_BOX, DECK
+			}
+
+			ValueObject Periodo {
+				Date inicio
+				Date fim
+			}
+
+			ValueObject FiltroDashboard {
+				-Periodo periodo nullable
+				-ColecaoIdentificador colecao nullable
+				-TipoEvento tipo nullable
+				-CategoriaProduto categoria nullable
+			}
+
+			ValueObject Indicador {
+				BigDecimal valorAtual
+				BigDecimal valorAnterior
+				BigDecimal variacaoPercentual
+			}
+
+			ValueObject ReceitaDiaria {
+				Date data
+				BigDecimal vendas
+				BigDecimal reembolsos
+				BigDecimal estornos
+				BigDecimal liquida
+			}
+
+			ValueObject FaturamentoSemanal {
+				int semana
+				BigDecimal receitaLiquida
+				BigDecimal receitaPeriodoAnterior
+			}
+
+			ValueObject Taxa {
+				int ocorrencias
+				int totalPedidos
+				BigDecimal percentual
+			}
+
+			ValueObject ItemRanking {
+				int posicao
+				-ProdutoId produto
+				String nomeProduto
+				String colecao
+				int quantidadeVendida
+				BigDecimal receita
+				BigDecimal crescimentoPercentual
+			}
+
+			ValueObject VendasPorColecao {
+				-ColecaoIdentificador colecao
+				String nome
+				BigDecimal receita
+				int quantidade
+			}
+
+			ValueObject DistribuicaoCategoria {
+				-CategoriaProduto categoria
+				BigDecimal receita
+				BigDecimal percentual
+			}
+
+			ValueObject PontoPreco {
+				Date data
+				BigDecimal preco
+			}
+
+			ValueObject ResumoDashboard {
+				-Indicador receitaLiquida
+				-Indicador ticketMedio
+				-Indicador unidadesVendidas
+				-Taxa taxaFalha
+				-Taxa taxaReembolso
+			}
+
+			ValueObject ItemVendido {
+				-ProdutoId produto
+				int quantidade
+				BigDecimal valor
+			}
+
+			Service DashboardServico {
+				@ResumoDashboard resumo(@FiltroDashboard filtro);
+				List<@ReceitaDiaria> receitaLiquidaPorDia(@FiltroDashboard filtro);
+				List<@FaturamentoSemanal> faturamentoSemanal(@FiltroDashboard filtro);
+				@Taxa taxaFalha(@FiltroDashboard filtro);
+				@Taxa taxaReembolso(@FiltroDashboard filtro);
+				List<@ItemRanking> rankingProdutos(@FiltroDashboard filtro, int limite);
+				List<@VendasPorColecao> vendasPorColecao(@FiltroDashboard filtro);
+				List<@DistribuicaoCategoria> distribuicaoPorCategoria(@FiltroDashboard filtro);
+				List<@PontoPreco> historicoPreco(@ProdutoId produto, @Periodo periodo);
+				List<@EventoNegocio> listarEventos(@FiltroDashboard filtro);
+				BigDecimal ticketMedio(@FiltroDashboard filtro);
+			}
+
+			// Contrato explicito de integracao entre Catalogo/Pedidos e Dashboard (sem Observer)
+			Service ProjecaoServico {
+				void aoPagarPedido(String eventoOrigemId, @PedidoAdmIdentificador pedido, List<@ItemVendido> itens, Date data);
+				void aoFalharPagamento(String eventoOrigemId, @PedidoAdmIdentificador pedido, Date data);
+				void aoReembolsarPedido(String eventoOrigemId, @PedidoAdmIdentificador pedido, BigDecimal valor, Date data);
+				void aoRevogarTransacao(String eventoOrigemId, @PedidoAdmIdentificador pedido, BigDecimal valor, Date data);
+				void aoAlterarPreco(String eventoOrigemId, @ProdutoId produto, BigDecimal precoNovo, Date data);
+				void aoCadastrarProduto(@ProdutoId produto, String nome, @CategoriaProduto categoria, BigDecimal preco, @ColecaoIdentificador colecao);
+				void aoCadastrarColecao(@ColecaoIdentificador colecao, String codigo, String nome);
+			}
+		}
+
+		Aggregate ProjecaoPedido {
+			Entity ProjecaoPedido {
+				aggregateRoot
+
+				-PedidoAdmIdentificador id key
+				String status
+				BigDecimal valorTotal
+				Date dataCriacao
+
+				Repository ProjecaoPedidoRepository {
+					@ProjecaoPedido incluir(@ProjecaoPedido agregado);
+					boolean existePorIdentificador(@PedidoAdmIdentificador id);
+					@ProjecaoPedido buscarPorIdentificador(@PedidoAdmIdentificador id);
+					void alterar(@ProjecaoPedido agregado);
+					void excluir(@PedidoAdmIdentificador id);
+					int contarPedidos(@Periodo periodo);
+					int contarPedidosPagos(@Periodo periodo);
+				}
+			}
+		}
+
+		Aggregate ProjecaoProduto {
+			Entity ProjecaoProduto {
+				aggregateRoot
+
+				-ProdutoId id key
+				String nome
+				-CategoriaProduto categoria
+				BigDecimal precoAtual
+				-ColecaoIdentificador colecao
+
+				Repository ProjecaoProdutoRepository {
+					@ProjecaoProduto incluir(@ProjecaoProduto agregado);
+					boolean existePorIdentificador(@ProdutoId id);
+					@ProjecaoProduto buscarPorIdentificador(@ProdutoId id);
+					void alterar(@ProjecaoProduto agregado);
+					void excluir(@ProdutoId id);
+				}
+			}
+		}
+
+		Aggregate ProjecaoColecao {
+			Entity ProjecaoColecao {
+				aggregateRoot
+
+				-ColecaoIdentificador id key
+				String codigo
+				String nome
+
+				Repository ProjecaoColecaoRepository {
+					@ProjecaoColecao incluir(@ProjecaoColecao agregado);
+					boolean existePorIdentificador(@ColecaoIdentificador id);
+					@ProjecaoColecao buscarPorIdentificador(@ColecaoIdentificador id);
+					void alterar(@ProjecaoColecao agregado);
+					void excluir(@ColecaoIdentificador id);
+					List<@ProjecaoColecao> listar();
+				}
+			}
+		}
+
+		Aggregate SnapshotDashboard {
+			Entity SnapshotDashboard {
+				aggregateRoot
+
+				-SnapshotId id key
+				String rotulo
+				-TipoDashboard tipoDashboard
+				-FiltroDashboard filtro
+				-List<MetricaSnapshot> metricas
+				String tabelaDestino
+				int totalRegistros
+				String hashIntegridade
+				String versaoEsquema
+				-AdminIdentificador criadoPor
+				Date criadoEm
+
+				def boolean integridadeValida();
+
+				Repository SnapshotDashboardRepository {
+					@SnapshotDashboard incluir(@SnapshotDashboard agregado);
+					boolean existePorIdentificador(@SnapshotId id);
+					@SnapshotDashboard buscarPorIdentificador(@SnapshotId id);
+					void alterar(@SnapshotDashboard agregado);
+					void excluir(@SnapshotId id);
+					List<@SnapshotDashboard> listar(@TipoDashboard tipo);
+					boolean existeHash(String hashIntegridade);
+				}
+			}
+
+			ValueObject SnapshotId {
+				String valor
+			}
+
+			ValueObject MetricaSnapshot {
+				String chave
+				BigDecimal valor
+			}
+
+			ValueObject DeltaMetrica {
+				String chave
+				BigDecimal valorA
+				BigDecimal valorB
+				BigDecimal variacaoPercentual
+			}
+
+			enum TipoDashboard {
+				VENDAS_RECEITA, CATALOGO_ESTOQUE, LOGISTICA_PEDIDOS, FINANCEIRO_CONCILIACAO, ENGAJAMENTO_COMUNIDADE
+			}
+
+			Service SnapshotServico {
+				@SnapshotDashboard exportar(@TipoDashboard tipo, @FiltroDashboard filtro, String rotulo, @AdminIdentificador admin);
+				List<@SnapshotDashboard> listarDisponiveis(@TipoDashboard tipo);
+				List<@DeltaMetrica> comparar(@SnapshotId snapshotA, @SnapshotId snapshotB);
+			}
+		}
+
+		Aggregate ProdutoDisponibilidade {
+			Entity ProdutoDisponibilidade {
+				aggregateRoot
+
+				-ProdutoId produto key
+				String nome
+				String link
+				int estoque
+				-StatusCatalogo status
+				boolean aviseMeHabilitado
+
+				def boolean aceitaAviso();
+
+				Repository ProdutoDisponibilidadeRepository {
+					@ProdutoDisponibilidade incluir(@ProdutoDisponibilidade agregado);
+					boolean existePorIdentificador(@ProdutoId produto);
+					@ProdutoDisponibilidade buscarPorIdentificador(@ProdutoId produto);
+					void alterar(@ProdutoDisponibilidade agregado);
+					void excluir(@ProdutoId produto);
+				}
+			}
+
+			enum StatusCatalogo {
+				ATIVO, ESGOTADO, OCULTO
+			}
+		}
+
+		Aggregate AvisoReposicao {
+			Entity AvisoReposicao {
+				aggregateRoot
+
+				-AvisoId id key
+				-ClienteId cliente
+				String enderecoEmail
+				-ProdutoId produto
+				Date criadoEm
+
+				Repository AvisoReposicaoRepository {
+					@AvisoReposicao incluir(@AvisoReposicao agregado);
+					boolean existePorIdentificador(@AvisoId id);
+					@AvisoReposicao buscarPorIdentificador(@AvisoId id);
+					void alterar(@AvisoReposicao agregado);
+					void excluir(@AvisoId id);
+					boolean existePorClienteEProduto(@ClienteId cliente, @ProdutoId produto);
+					List<@AvisoReposicao> listarFila(@ProdutoId produto, int limite);
+					int contarPorProduto(@ProdutoId produto);
+					void removerPorIds(List<@AvisoId> avisos);
+					void removerPorProduto(@ProdutoId produto);
+					void removerPorClienteEProduto(@ClienteId cliente, @ProdutoId produto);
+				}
+			}
+
+			ValueObject AvisoId {
+				String valor
+			}
+
+			ValueObject ResumoDistribuicao {
+				int clientesNaFila
+				int clientesANotificar
+				int excedenteVisivel
+			}
+
+			Service AviseMeServico {
+				boolean exibirBotaoAviseMe(@ProdutoId produto);
+				void solicitarAviso(@ClienteId cliente, String enderecoEmail, @ProdutoId produto);
+				void cancelarAviso(@ClienteId cliente, @ProdutoId produto);
+			}
+
+			Service FilaReposicaoServico {
+				List<@AvisoReposicao> fila(@ProdutoId produto);
+				@ResumoDistribuicao simularDistribuicao(@ProdutoId produto, int quantidade);
+				List<@LoteDisparo> historicoDisparos(int limite);
+				BigDecimal conversaoPosAviso(Date inicio, Date fim);
+			}
+
+			// Contrato explicito de sincronizacao entre Catalogo/Pedidos e AviseMe (sem Observer)
+			Service SincronizacaoServico {
+				void aoReporEstoque(@ProdutoId produto, String nome, String link, int reservadaFila, Date reservaExpiraEm);
+				void aoEsgotarProduto(@ProdutoId produto, boolean habilitarAviseMe);
+				void aoOcultarProduto(@ProdutoId produto);
+				void aoPagarPedido(@ClienteId cliente, List<@ProdutoId> produtos, Date data);
+			}
+		}
+
+		Aggregate LoteDisparo {
+			Entity LoteDisparo {
+				aggregateRoot
+
+				-LoteDisparoId id key
+				-ProdutoId produto
+				int clientesNotificados
+				int emailsEnviados
+				int pushEnviados
+				Date disparadoEm
+
+				Repository LoteDisparoRepository {
+					@LoteDisparo incluir(@LoteDisparo agregado);
+					boolean existePorIdentificador(@LoteDisparoId id);
+					@LoteDisparo buscarPorIdentificador(@LoteDisparoId id);
+					void alterar(@LoteDisparo agregado);
+					void excluir(@LoteDisparoId id);
+					List<@LoteDisparo> listarRecentes(int limite);
+				}
+			}
+
+			ValueObject LoteDisparoId {
+				String valor
+			}
+		}
+
+		Aggregate Notificacao {
+			Entity Notificacao {
+				aggregateRoot
+
+				-NotificacaoId id key
+				-ClienteId cliente
+				-ProdutoId produto
+				String mensagem
+				String linkProduto
+				boolean emailEnviado
+				boolean pushEnviado
+				boolean lida
+				Date reservaExpiraEm
+				boolean convertida
+				Date criadaEm
+
+				def void marcarComoLida();
+				def void registrarConversao();
+
+				Repository NotificacaoRepository {
+					@Notificacao incluir(@Notificacao agregado);
+					boolean existePorIdentificador(@NotificacaoId id);
+					@Notificacao buscarPorIdentificador(@NotificacaoId id);
+					void alterar(@Notificacao agregado);
+					void excluir(@NotificacaoId id);
+					int contarNaoLidas(@ClienteId cliente);
+					List<@Notificacao> listarPorCliente(@ClienteId cliente);
+					List<@Notificacao> listarConversiveis(@ClienteId cliente, Date desde);
+					int contarEnviadas(Date inicio, Date fim);
+					int contarConvertidas(Date inicio, Date fim);
+					void salvarEmLote(List<@Notificacao> notificacoes);
+				}
+			}
+
+			ValueObject NotificacaoId {
+				String valor
+			}
+
+			Service NotificacaoServico {
+				int contarNaoLidas(@ClienteId cliente);
+				List<@Notificacao> listar(@ClienteId cliente);
+				void marcarComoLida(@NotificacaoId notificacao, @ClienteId cliente);
 			}
 		}
 	}

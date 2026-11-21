@@ -10,6 +10,7 @@ ContextMap {
 
 BoundedContext comunidade implements comunidade {
 	Module comunidade {
+		// ==================== LUCAS MENEZES (Padrao GoF exclusivo: Proxy) ====================
 		Aggregate PerfilComunitario {
 			Entity PerfilComunitario {
 				aggregateRoot
@@ -301,6 +302,74 @@ BoundedContext comunidade implements comunidade {
 				@AberturaPreferida consultarAberturaNoPerfil(@UsuarioIdentificador solicitante, @UsuarioIdentificador alvo);
 				boolean amigosPossuemMesmaPreferencia(@UsuarioIdentificador solicitante, @UsuarioIdentificador amigo);
 				int contarAmigosComAbertura(@UsuarioIdentificador usuario, @AberturaIdentificador abertura);
+			}
+		}
+
+		// ==================== RICARDO FREITAS (Minha Colecao — Padrao GoF exclusivo: Observer) ====================
+		Aggregate ColecaoPessoal {
+			Entity ColecaoPessoal {
+				aggregateRoot
+
+				-ColecaoPessoalIdentificador identificador key
+				-UsuarioIdentificador usuario
+				boolean resumoPublico
+				-List<ItemColecaoPessoal> itens
+
+				def void adicionarCarta(@ItemColecaoPessoal item);
+				def void removerCarta(@CartaIdentificador carta, String idioma, String condicao);
+				def void alterarQuantidade(@CartaIdentificador carta, String idioma, String condicao, int quantidade);
+				def void alterarObservacoes(@CartaIdentificador carta, String idioma, String condicao, String observacoes);
+				def void alterarVisibilidade(boolean publico);
+				def int contarExemplares(@CartaIdentificador carta);
+
+				Repository ColecaoPessoalRepository {
+					@ColecaoPessoal incluir(@ColecaoPessoal agregado);
+					boolean existePorIdentificador(@ColecaoPessoalIdentificador identificador);
+					@ColecaoPessoal buscarPorIdentificador(@ColecaoPessoalIdentificador identificador);
+					void alterar(@ColecaoPessoal agregado);
+					void excluir(@ColecaoPessoalIdentificador identificador);
+					boolean existePorUsuario(@UsuarioIdentificador usuario);
+					@ColecaoPessoal buscarPorUsuario(@UsuarioIdentificador usuario);
+				}
+			}
+
+			ValueObject ColecaoPessoalIdentificador {
+				String valor
+			}
+
+			ValueObject ItemColecaoPessoal {
+				-CartaIdentificador carta
+				String idioma
+				String condicao
+				int quantidade
+				String observacoes nullable
+			}
+
+			ValueObject CotacaoReferencia {
+				-CartaIdentificador carta
+				String idioma
+				String condicao
+				BigDecimal valor
+				Date atualizadoEm
+			}
+
+			ValueObject Valuation {
+				BigDecimal valorEstimado
+				boolean parcial
+				-List<ItemColecaoPessoal> itensSemCotacao
+			}
+
+			Service ColecaoPessoalServico {
+				BigDecimal calcularProgresso(@UsuarioIdentificador usuario, @ColecaoIdentificador colecao);
+				@Valuation calcularValuation(@UsuarioIdentificador usuario);
+				@CotacaoReferencia buscarCotacao(@CartaIdentificador carta, String idioma, String condicao);
+				int contarExemplaresUsuario(@UsuarioIdentificador usuario, @CartaIdentificador carta);
+			}
+
+			// Padrao GoF Observer (exclusivo de Ricardo): reage a atualizacoes de cotacao e eventos de posse
+			Service ColecaoPessoalObserver {
+				void aoAtualizarCotacao(@CotacaoReferencia cotacao);
+				void aoAlterarAcervo(@UsuarioIdentificador usuario, @CartaIdentificador carta);
 			}
 		}
 	}
