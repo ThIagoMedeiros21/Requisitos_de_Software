@@ -1,0 +1,44 @@
+# Relatório de Auditoria — Etapa 2: Planejamento da Etapa 3.3 (`adm / F001` + `comunidade / F004` — Aberturas de One Piece)
+
+**Parecer Final:** **APROVADO**  
+**Escopo Auditado:** Etapa 1 (Planejar) da **Etapa 3.3 (`adm / F001 — Gestão administrativa de aberturas de One Piece`** + **`comunidade / F004 — Abertura preferida do anime One Piece`)** de Lucas Menezes — plano técnico unificado, rastreabilidade, User Story Map, Linguagem Onipresente e Protótipos de Alta Fidelidade Stitch (sem código Java/React implementado).  
+**Responsável pela Auditoria:** `Supervisor`
+
+---
+
+## 1. Resumo Executivo
+
+O planejamento completo da **Etapa 3.3 (`adm / F001` + `comunidade / F004`)** produzido por `@architect` e `@designer` foi auditado de forma independente pelo `Supervisor` e recebeu parecer **APROVADO**:
+
+- **Trava Rígida de Padrões GoF 100% respeitada**: uso exclusivo de **`Proxy`** para Lucas Menezes (`IAberturaPreferidaPrivacidadeProxy` / `AberturaPreferidaPrivacidadeProxy` para ocultação no perfil público, proteção de correspondência entre amigos e filtro de aberturas ativas, além de `IAnimeThemesCatalogoProxy` opcional para metadados externos), **`Template Method`** mantido exclusivamente nas superclasses abstratas do framework **D5**, e **zero uso de `Observer`** (`grep -rn "Observer" docs/plans/etapa-3-3-aberturas.md` retornou exclusivamente cláusulas explícitas de proibição).
+- **Grafo Acíclico de Subdomínios (`comunidade → adm`, zero ciclo)**: `tcghub/dominio-comunidade/pom.xml` passa a depender unidirecionalmente de `tcghub-dominio-adm` (Downstream → Upstream), enquanto `dominio-adm` **nunca** depende de `dominio-comunidade`. A validação de `adm/F001 RN006` (`possuiEscolhaPorUsuario`) é declarada via SPI em `dominio-adm` e implementada na camada `infraestrutura` consultando `IAberturaPreferidaRepositorioJpa.existsByAberturaIdentificador(Long)`.
+- **Rastreabilidade 100% verificada (`35/35` cenários BDD)**:
+  - **`adm / F001`**: todas as **6 Regras de Negócio (`RN001`–`RN006`)** de [adm/F001.md](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/adm/funcionalidades/F001.md) estão mapeadas 1:1 aos **19 cenários** de [abertura.feature](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/dominio-adm/src/test/resources/features/abertura.feature) (`21` métodos `@Dado/@Quando/@Então` em `AberturaStepDefinitions.java`, `80` linhas de passos Gherkin), ao `Aggregate Abertura` em [adm/projeto.cml](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/adm/projeto.cml), à tabela `ABR_ABERTURA` em [adm/projeto.dbml](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/adm/projeto.dbml), às histórias `US-26`..`US-30` e aos protótipos `P15`–`P16`.
+  - **`comunidade / F004`**: todas as **6 Regras de Negócio (`RN001`–`RN006`)** de [comunidade/F004.md](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/comunidade/funcionalidades/F004.md) estão mapeadas 1:1 aos **16 cenários** de [abertura-preferida.feature](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/dominio-comunidade/src/test/resources/features/abertura-preferida.feature) (`30` métodos `@Dado/@Quando/@Então` em `AberturaPreferidaStepDefinitions.java`, `87` linhas de passos Gherkin), ao `Aggregate AberturaPreferida` em [comunidade/projeto.cml](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/comunidade/projeto.cml), à tabela `APR_ABERTURA_PREFERIDA` em [comunidade/projeto.dbml](file:///Users/menezes/faculdade/Requisitos_de_Software/tcghub/docs/comunidade/projeto.dbml), às histórias `US-31`..`US-36` e aos protótipos `P17`–`P18` + card em `P01`.
+- **Conformidade D5, Clean Architecture e Atenção a Conflito BDD**: zero anotações Spring em `dominio-adm` e `dominio-comunidade`, `@NullMarked` obrigatório em todos os pacotes novos, zero `@Transactional` manual em controladores REST, e tratamento preventivo documentado para o passo compartilhado `Dado que existe o perfil comunitário do usuário {string} com apelido {string}` entre `decks-favoritos.feature` e `abertura-preferida.feature`.
+- **Contrato Oficial AnimeThemes API (`https://api.animethemes.moe`) & Alinhamento Stitch**: endpoint `/anime/one_piece?include=animethemes.song.artists,animethemes.animethemeentries.videos,images` integralmente mapeado (`sequence`/`slug`, `song.title`, `song.artists[].name`, `animethemeentries[].episodes`, `images[].link`, `videos[].link`) com seed inicial de 8 aberturas clássicas e fallback offline determinístico; telas Stitch `b2a45fd86fd84870b32e71fbd1c43fc4`, `4734db8f5e32474ca6da6c27f95b7ada`, `8a09531ad18f495bbc2f422ed9d3f34d` e `eb3be1f6e46e4ad8ae22f2fb8b39731e` alinhadas a `frontend/src/styles/tokens.css` (Tailwind CSS v4, zero Bootstrap, zero Angular).
+- **Restrição sem código verificada**: `git status --short tcghub/ frontend/` retornou vazio, confirmando zero alterações prematuras em Java ou React.
+
+---
+
+## 2. Checklist de Auditoria (Etapa 2)
+
+| Critério Auditado | Artefatos e Evidências Verificadas | Status |
+| :--- | :--- | :---: |
+| **Plano Técnico Unificado** | [docs/plans/etapa-3-3-aberturas.md](file:///Users/menezes/faculdade/Requisitos_de_Software/docs/plans/etapa-3-3-aberturas.md) — matrizes `adm/F001` (19 cenários) e `comunidade/F004` (16 cenários), grafo Mermaid acíclico `comunidade → adm`, trava GoF `Proxy`, contrato `api.animethemes.moe`, seed de 8 aberturas, inventário por módulo (`dominio-adm`, `dominio-comunidade`, `aplicacao`, `infraestrutura`, `ui-backend`, `/frontend/`), plano de testes e estratégia de commits incrementais. | Aprovado |
+| **User Story Map (`adm/F001` + `comunidade/F004`)** | [docs/user-story-map/README.md](file:///Users/menezes/faculdade/Requisitos_de_Software/docs/user-story-map/README.md) (Seção `3.4`) — jornada Mermaid `flowchart LR`, histórias `US-26` a `US-36` em 3 fatias (escrita + leitura + privacidade Proxy) e rastreabilidade completa dos `35/35` cenários BDD. | Aprovado |
+| **Linguagem Onipresente** | [docs/linguagem-onipresente/README.md](file:///Users/menezes/faculdade/Requisitos_de_Software/docs/linguagem-onipresente/README.md) (Seção `8`) — `AberturaPreferida`, `APR_VISIVEL_NO_PERFIL`, `RankingComunidade` (`Top 5` com cômputo anônimo de perfis ocultos), `AmigosMesmaPreferencia`, `SPI de Verificação de Vínculo de Abertura`, `AnimeThemes API` e `AberturaPreferidaPrivacidadeProxy`. | Aprovado |
+| **Protótipos Stitch & Componentes Frontend** | [docs/prototipos/README.md](file:///Users/menezes/faculdade/Requisitos_de_Software/docs/prototipos/README.md) (Seção `6`, `P15`–`P18` + Seção `7` Matriz) — telas Stitch do projeto `18247718655827442438`, componentes em `frontend/src/features/community/openings/` (`FavoriteOpeningsPage`, `OpeningDetailsModal`, `FavoriteOpeningProfileCard`) e `frontend/src/features/adm/openings/` (`AdminOpeningsPage`, `AdminOpeningFormModal`), store efêmera `openingsUiStore.ts`, card no perfil com toggle e badge de correspondência de amigo via Proxy, painel `/adm/aberturas` restrito a `ADMINISTRADOR` com alerta `RN006` e player/link de vídeo AnimeThemes. | Aprovado |
+| **Trava GoF (`Proxy` exclusivo, ZERO `Observer`)** | `AberturaPreferidaPrivacidadeProxy` (+ `AnimeThemesCatalogoProxy` opcional) e `Template Method` D5; busca por `Observer` em `etapa-3-3-aberturas.md` confirmou apenas proibições explícitas. | Aprovado |
+| **Grafo Acíclico (`comunidade → adm`)** | `dominio-adm` livre de dependência em `dominio-comunidade`; verificação de vínculo de `RN006` (`possuiEscolhaPorUsuario`) resolvida via SPI implementada em `infraestrutura`. | Aprovado |
+| **Alinhamento BFF ↔ Frontend** | Endpoints idênticos entre plano técnico e protótipos: `/backend/adm/abertura/{pesquisa,{id}/visualizacao,incluir,{id}/alterar,{id}/inativar,{id}/reativar,{id}/excluir}` e `/backend/comunidade/abertura-preferida/{pesquisa,ranking,perfil/{perfilId},{id}/visualizacao,escolher,ocultar,reexibir}`. | Aprovado |
+| **Ausência de Código Prematuro** | `git status --short tcghub/ frontend/` vazio; apenas 4 arquivos de documentação modificados/criados em `docs/`. | Aprovado |
+
+> [!NOTE]
+> **Observação factual não bloqueante sobre contagens textuais de passos:** os arquivos `.feature` possuem exatamente **19 cenários** (`80` linhas Gherkin, `21` métodos em `AberturaStepDefinitions.java`) em `abertura.feature` e **16 cenários** (`87` linhas Gherkin, `30` métodos em `AberturaPreferidaStepDefinitions.java`) em `abertura-preferida.feature`, totalizando **35 cenários** 100% cobertos no planejamento. Na Etapa 4, a validação deve exigir **19/19** e **16/16** com `0 PendingException`.
+
+---
+
+## 3. Próximo Passo
+
+- Reportar parecer **APROVADO** ao `@coordinator` para consolidação dos artefatos de planejamento e liberação da **Etapa 3 (Implementar)** da **Etapa 3.3 (`adm / F001` + `comunidade / F004`)**.
