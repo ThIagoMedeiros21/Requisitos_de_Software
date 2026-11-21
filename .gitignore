@@ -1,6 +1,11 @@
 # Build Maven / Java
 **/target/
 
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
 # macOS
 .DS_Store
 

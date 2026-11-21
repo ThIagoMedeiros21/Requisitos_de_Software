@@ -1,110 +1,100 @@
 # tcghub
 
-Projeto focado em cardgame.
+Projeto focado em cardgame (**TCGHub** — plataforma web de comunidade, catálogo e comércio de cardgames).
 
-> [!IMPORTANT]
-> Este módulo integra o repositório compartilhado do projeto, enquanto [../.agents.md](../.agents.md) é o **arquivo de orquestração exclusivo de Lucas Menezes e seus agentes**. Leia [../.agents.md](../.agents.md) para o fluxo fatiado por funcionalidade, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
+> [!NOTE]
+> Este arquivo define as convenções técnicas, arquiteturais, de stack e de qualidade compartilhadas do monorepo `tcghub/`. A orquestração multiagente e as skills de papéis pertencem exclusivamente ao fluxo privado de Lucas Menezes fora deste escopo compartilhado.
 
-## Engenharia de software
-- MDE (Model-Driven Engineering)
-- DDD (Domain-Driven Design — preliminar, estratégico, tático e operacional)
-- Evitar antipadrão modelo de domínio anêmico
-- CQRS (Command Query Responsibility Segregation)
-- Arquitetura limpa
-- SPI (Service Provider Interface)
-- BDD (Behaviour-Driven Development)
-- Programação defensiva
-- ORM (Object-Relational Mapping)
-- BFF (Backend For Frontend)
+## Escopo e Distribuição de Funcionalidades
+Toda funcionalidade do sistema deve ser **completa** (operações de escrita, validações, regras de negócio e consulta — nunca apenas leitura), persistida em banco de dados relacional e exposta em interface web.
+
+| Integrante | Área | Funcionalidades (12 no total) | Subdomínios | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lucas Menezes** | Comunidade e interação | 1. Perfil e amigos<br>2. Decks favoritos<br>3. Avaliação de cartas<br>4. Abertura preferida do anime One Piece | `comunidade` (+ gestão admin em `adm`) | Em implementação fatiada |
+| **Ricardo Freitas** | Compras e organização de cartas | 1. Comprar produto<br>2. Recomendação de cartas<br>3. Wishlist<br>4. Minha coleção | `loja` (1–3) e `comunidade` (4) | BDD + `.cml` incorporados; implementação em equipe paralela |
+| **Thiago Medeiros** | Operação comercial e notificações | 1. Gestão do catálogo<br>2. Gestão de pedidos<br>3. Dashboard de vendas<br>4. Avise-me | `adm` (ver [../docs/thiago-pendente/README.md](../docs/thiago-pendente/README.md)) | `.cml` incorporado; demais artefatos pendentes |
+
+## Engenharia de Software e Arquitetura (Clean Architecture + 4 Níveis DDD)
+- **MDE** (Model-Driven Engineering) com **Context Mapper** (`.cml`) e **DBML** (`.dbml`)
+- **Clean Architecture + DDD nos 4 níveis**:
+  1. **DDD Preliminar**: Linguagem Onipresente, Mapa de História do Usuário e Protótipos de Alta Fidelidade.
+  2. **DDD Estratégico**: Subdomínios (`adm`, `comunidade`, `loja`, `compartilhado`) e relações `Downstream-Upstream` em grafo estritamente acíclico (`loja -> comunidade -> adm -> compartilhado`).
+  3. **DDD Tático**: Agregados (`IAgregado`, exatamente 1 entidade raiz por agregado), Entidades, Objetos de Valor (`ObjetoValorStringAbstrato`, `ObjetoValorRegexAbstrato`, `IObjetoValor`), Serviços de Domínio (`AgregadoServicoAbstrato`) e SPIs de Repositório (`IAgregadoRepositorio`). **Proibido** modelo de domínio anêmico.
+  4. **DDD Operacional**: Persistência JPA/ORM, projeções **CQRS**, exposição **BFF** REST em `ui-backend`, apresentação web em `ui-frontend` e **programação defensiva** estrita (ver [programar-defensivamente](.agents/skills/programar-defensivamente/SKILL.md)).
+- **Isolamento entre subdomínios**: um conceito pertence ao módulo de seu subdomínio; integrações intercontextos utilizam identificadores e contratos SPI (jamais acoplamento direto ao banco de outro subdomínio, e jamais dependências cíclicas).
 
 ## Tecnologias
-- Context Mapper 6.12.0
-- Java 25
-- Cucumber 7.34.8
-- Mockito 5.23.0
-- JSpecify 1.0
-- DBML (Database Markup Language) 10.1.1
-- Spring Boot 4.1.1
-- React 19.3.0
-- Vite 8.3.0
-- Tailwind CSS (a adicionar em `ui-frontend/src/main/react/package.json` na Etapa 3)
-- React Router 8.5.0
-- TanStack Query 5.104.0
-- Zustand (a adicionar em `ui-frontend/src/main/react/package.json` na Etapa 3)
-- React Hook Form 7.90.0
-- React Bootstrap 2.10.10
-- Bootstrap 5.3.8
-- D5 1.0.0-SNAPSHOT
+- **Linguagem / Backend**: Java 25, Spring Boot `4.1.1`, Framework D5 `1.0.0-SNAPSHOT`
+- **Persistência / Banco Relacional**: JPA / ORM com **PostgreSQL** (execução do ambiente em Docker) e **H2** (testes `@DataJpaTest`)
+- **Frontend**: React `19.3.0`, Vite `8.3.0`, Tailwind CSS (a adicionar em `ui-frontend/src/main/react/package.json` na implementação de UI), TanStack Query `5.104.0`, React Router `8.5.0`, Zustand (a adicionar em `ui-frontend/src/main/react/package.json` na implementação de UI), React Hook Form `7.90.0`, React Bootstrap `2.10.10`, Bootstrap `5.3.8`
+- **Modelagem**: Context Mapper `6.12.0` (`.cml`) e DBML `10.1.1` (`.dbml`)
+- **Qualidade e Testes**: Cucumber `7.34.8`, Mockito `5.23.0`, JSpecify `1.0` (`@NullMarked` obrigatório em todos os pacotes)
 
 ## Subdomínios
-- adm (subdomínio principal): Administrador
-- comunidade (subdomínio de suporte): Comunidade
-- loja (subdomínio principal): Usuario
+- `adm` (subdomínio principal): Administrador
+- `comunidade` (subdomínio de suporte): Comunidade
+- `loja` (subdomínio principal): Usuario
 
 ## Maven
-- groupId: com.cesar.tgchub
-- artifactId do projeto raiz: tcghub-pai
-- version: 1.0.0-SNAPSHOT
+- `groupId`: `com.cesar.tgchub`
+- `artifactId` do projeto raiz: `tcghub-pai`
+- `version`: `1.0.0-SNAPSHOT`
 
 ### Módulos
-- dominio-compartilhado (conceitos que não pertencem a nenhum subdomínio específico e são comuns a todos eles, por exemplo, os papéis de autorização)
-- dominio-**S** (entidades, objetos de valor, serviços e SPIs de um subdomínio **S**, por exemplo, interfaces de repositórios)
-- aplicacao (serviços de aplicação, projeções de entidades e SPIs da camada de aplicação, por exemplo, interfaces de repositórios de aplicação)
-- infraestrutura (implementações das SPIs)
-- ui-backend (controladores REST do backend para o frontend)
-- ui-frontend (aplicação React do frontend)
+- `dominio-compartilhado` (conceitos que não pertencem a nenhum subdomínio específico e são comuns a todos eles, por exemplo, os papéis de autorização e `UsuarioIdentificador`)
+- `dominio-S` (entidades, objetos de valor, serviços e SPIs de um subdomínio **S**, por exemplo, interfaces de repositórios)
+- `aplicacao` (serviços de aplicação, projeções de entidades e SPIs da camada de aplicação, por exemplo, interfaces de repositórios de aplicação)
+- `infraestrutura` (implementações das SPIs)
+- `ui-backend` (controladores REST do backend para o frontend)
+- `ui-frontend` (aplicação React do frontend)
 
-Um conceito que pertence a um subdomínio fica no módulo dele, mesmo que outros subdomínios o usem. Todo módulo dominio-**S** depende de dominio-compartilhado e pode depender também do módulo de outro subdomínio cujos conceitos ele referencia, desde que as dependências entre módulos de subdomínio não formem um ciclo.
+Um conceito que pertence a um subdomínio fica no módulo dele, mesmo que outros subdomínios o usem. Todo módulo `dominio-S` depende de `dominio-compartilhado` e pode depender também do módulo de outro subdomínio cujos conceitos ele referencia, desde que as dependências entre módulos de subdomínio não formem um ciclo.
 
-## Documentação e modelos
+## Documentação e Modelos
 Para cada subdomínio **S**:
 
-- docs/**S**/funcionalidades/*.md (especificações de funcionalidades de **S** no formato Markdown)
-- dominio-**S**/src/test/resources/features/*.feature (especificações de testes de **S** na linguagem Gherkin)
-- docs/**S**/projeto.cml (modelo de projeto de software de **S** na linguagem do Context Mapper)
-- docs/**S**/projeto.dbml (modelo de projeto de banco de dados relacional de **S** na linguagem DBML)
+- `docs/S/funcionalidades/*.md` (especificações de funcionalidades de **S** no formato Markdown)
+- `dominio-S/src/test/resources/features/*.feature` (especificações de testes de **S** na linguagem Gherkin)
+- `docs/S/projeto.cml` (modelo de projeto de software de **S** na linguagem do Context Mapper)
+- `docs/S/projeto.dbml` (modelo de projeto de banco de dados relacional de **S** na linguagem DBML)
 
 Os arquivos [compartilhado/projeto.cml](docs/compartilhado/projeto.cml) e [projeto.cml](docs/projeto.cml) complementam o modelo de projeto de software. Já o arquivo [projeto.dbml](docs/projeto.dbml) complementa o modelo do projeto de banco de dados.
 
-## Idioma
-Todos os artefatos do projeto (documentação, modelos, código, comentários, etc.) devem ser escritos em português do Brasil, sempre que possível. Mensagens de commit no Git devem ser escritas em **inglês** seguindo o padrão **Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, etc.).
+## Trava Rígida de Padrões de Projeto GoF
+Para cumprir o mínimo de **4 padrões de projeto GoF distintos** (dentre `Iterator`, `Decorator`, `Observer`, `Proxy`, `Strategy` e `Template Method`) **sem repetição**, vigora a regra inflexível de **1 único padrão exclusivo por integrante**:
+
+| Integrante / Camada | Funcionalidade | Subdomínio | Padrão GoF Exclusivo | Justificativa Arquitetural |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ricardo Freitas** | Comprar produto | `loja` | **Observer** *(exclusivo)* | Desacopla reações a eventos do ciclo de vida do pedido (aprovação de pagamento, expiração de reserva em 30 min e eventos de timeline) sem acoplar estoque, pagamento e notificações. |
+| **Ricardo Freitas** | Recomendação de cartas | `loja` | **Observer** *(exclusivo)* | Atualiza o perfil de consumo de forma reativa a eventos de compra paga e reembolso confirmado, evitando contagem duplicada e acoplamento com o checkout. |
+| **Ricardo Freitas** | Wishlist | `loja` | **Observer** *(exclusivo)* | Monitora transições de preço e reposição de estoque compatível (disparando alertas na transição falso → verdadeiro) e sincroniza reservas de presente. |
+| **Ricardo Freitas** | Minha coleção | `comunidade` | **Observer** *(exclusivo)* | Reage a atualizações de cotação de referência e mantém consistência de consultas entre acervo pessoal e avisos informativos na wishlist. |
+| **Lucas Menezes** | Perfil e amigos | `comunidade` | **Proxy** *(exclusivo)* | Proxy de proteção/visibilidade (`PerfilComunitarioVisibilidadeProxy`) controlando leitura pública vs. proprietário e bloqueando mutações de terceiros. |
+| **Lucas Menezes** | Decks favoritos | `comunidade` | **Proxy** *(exclusivo)* | Proxy de integração/ACL (`CatalogoDeckProxy`) sobre SPI do Catálogo para consultar composição e preços sem acoplamento ao banco externo. |
+| **Lucas Menezes** | Avaliação de cartas | `comunidade` | **Proxy** *(exclusivo)* | Proxy de elegibilidade (`AvaliacaoElegibilidadeProxy`) validando compra paga e não reembolsada (`CompraVerificada`) e selo de compra verificada. |
+| **Lucas Menezes** | Abertura preferida do anime One Piece | `comunidade` + `adm` | **Proxy** *(exclusivo)* | Proxy de privacidade e autorização (`AberturaPreferidaPrivacidadeProxy`) ocultando a escolha no perfil público/amigos sem removê-la do ranking Top 5. |
+| **Thiago Medeiros** *(pendente)* | Gestão do catálogo, Gestão de pedidos, Dashboard de vendas, Avise-me | `adm` | **1 padrão reservado** *(escolher entre `Strategy`, `Decorator` ou `Iterator`)* | A definir na entrega dos artefatos restantes. **`Observer`**, **`Proxy`** e **`Template Method`** permanecem **bloqueados** para evitar repetição. |
+| **Camada Compartilhada / Transversal** | Fluxos estruturais de domínio, aplicação e infraestrutura D5 | `dominio-compartilhado`, `aplicacao`, `infraestrutura` | **Template Method** *(exclusivo transversal)* | Define o esqueleto invariante das operações de serviço, consulta e persistência (`AgregadoServicoAbstrato`, `AgregadoRepositorioAbstrato`, `AgregadoAplicacaoRepositorioAbstrato`), delegando variações aos ganchos das subclasses. |
+
+## Idioma e Governança de IA
+- **Artefatos**: documentação, modelos, código, testes BDD e comentários devem ser escritos em **português do Brasil**, sempre que possível.
+- **Commits Git**: mensagens de commit devem ser escritas em **inglês** seguindo o padrão **Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, etc.). Nunca incluir `target/`, `node_modules/` ou `.env` nos commits e nunca executar `git push` sem pedido explícito do usuário.
+- **Registros de IA e Auditoria**: manter evidências das interações com IAs em `../docs/ai-interactions/` e relatórios de auditoria em `../docs/reports/`.
 
 ## Pacotes
-O código de objetos de valor, entidades e serviço de um agregado **A** de um subdomínio **S** pertencem ao pacote com.cesar.tgchub.tcghub.dominio.**S**.**A**.
+O código de objetos de valor, entidades e serviço de um agregado **A** de um subdomínio **S** pertencem ao pacote `com.cesar.tgchub.tcghub.dominio.S.A`.
 
-A interface do repositório de **A** pertence ao pacote com.cesar.tgchub.tcghub.dominio.**S**.**A**.spi.
+A interface do repositório de **A** pertence ao pacote `com.cesar.tgchub.tcghub.dominio.S.A.spi`.
 
-Projeções e serviços de aplicação de **A** pertencem ao pacote com.cesar.tgchub.tcghub.aplicacao.**S**.**A**.
+Projeções e serviços de aplicação de **A** pertencem ao pacote `com.cesar.tgchub.tcghub.aplicacao.S.A`.
 
-A interface do repositório de aplicação de **A** pertence ao pacote com.cesar.tgchub.tcghub.aplicacao.**S**.**A**.spi.
+A interface do repositório de aplicação de **A** pertence ao pacote `com.cesar.tgchub.tcghub.aplicacao.S.A.spi`.
 
-A implementação dos repositórios de **A** pertence ao pacote com.cesar.tgchub.tcghub.infraestrutura.**S**.**A**.
+A implementação dos repositórios de **A** pertence ao pacote `com.cesar.tgchub.tcghub.infraestrutura.S.A`.
 
-O controlador REST de **A** pertence ao pacote com.cesar.tgchub.tcghub.ui.backend.**S**.**A**.
+O controlador REST de **A** pertence ao pacote `com.cesar.tgchub.tcghub.ui.backend.S.A`.
 
-Todos os pacotes são anotados com @NullMarked.
-
-## Escopo e Trava de Padrões GoF
-- **Funcionalidades completas**: nenhuma funcionalidade pode ser apenas de leitura.
-- **Escopo Onda 1**: apenas BDD (`.feature` em português) e esqueletos `*StepDefinitions.java` para as 8 funcionalidades de **Lucas Menezes** e **Ricardo Freitas** (sem implementar código de negócio).
-- **Escopo Onda 2+**: este teamwork implementa **exclusivamente as 4 funcionalidades de Lucas Menezes** (`Perfil e amigos`, `Decks favoritos`, `Avaliação de cartas`, `Abertura preferida do anime One Piece`). Ricardo e Thiago (4 funcionalidades pendentes em [../docs/thiago-pendente/README.md](../docs/thiago-pendente/README.md)) seguem em outras equipes.
-- **Trava rígida GoF (1 padrão único por membro, mínimo 4 distintos no projeto, zero repetição)**:
-  - **Ricardo Freitas** → **Observer** *(exclusivo; bloqueado para Lucas, Thiago e camada compartilhada)* — Comprar produto (`loja`), Recomendação de cartas (`loja`), Wishlist (`loja`), Minha coleção (`comunidade`).
-  - **Lucas Menezes** → **Proxy** *(exclusivo; bloqueado para Ricardo e Thiago)* — Perfil e amigos (`comunidade`), Decks favoritos (`comunidade`), Avaliação de cartas (`comunidade`), Abertura preferida do anime One Piece (`comunidade` + `adm`).
-  - **Thiago Medeiros** *(pendente)* → **1 padrão reservado** (a escolher entre `Strategy`, `Decorator` ou `Iterator` quando os artefatos chegarem).
-  - **Camada Compartilhada / Transversal** → **Template Method** *(exclusivo transversal em `dominio-compartilhado`, `aplicacao` e `infraestrutura` sobre os fluxos base do D5)*.
-  - Ver tabela detalhada com justificativas em [../.agents.md](../.agents.md#4-trava-rígida-de-padrões-de-projeto-gof).
-
-## Workflow Obrigatório e Skills de Papéis
-Sempre **verificar e confirmar com o usuário antes de executar os workflows de planejamento** (Etapa 1). Toda funcionalidade segue as 5 etapas governadas pelas skills em [../.agents/skills/](../.agents/skills/):
-
-1. **Planejar** ([architect](../.agents/skills/architect/SKILL.md) + [designer](../.agents/skills/designer/SKILL.md)) — após confirmação do usuário
-2. **Validar planejamento** ([supervisor](../.agents/skills/supervisor/SKILL.md))
-3. **Implementar** ([backend-developer](../.agents/skills/backend-developer/SKILL.md) + [frontend-developer](../.agents/skills/frontend-developer/SKILL.md))
-4. **Validar cenários BDD no Cucumber** ([qa-engineer](../.agents/skills/qa-engineer/SKILL.md))
-5. **Auditar conformidade e relatar** ([supervisor](../.agents/skills/supervisor/SKILL.md))
-
-Além das 5 etapas, o papel [repo-guardian](../.agents/skills/repo-guardian/SKILL.md) acompanha continuamente mudanças no repositório, analisa impactos sobre `compartilhado`, `adm`, `comunidade` e as funcionalidades de Lucas Menezes, e consolida entregas em **commits pequenos e incrementais em inglês no padrão Conventional Commits** (mantendo código, documentação, modelos e testes em português do Brasil, sem incluir `target/` e sem executar `git push` sem autorização explícita do usuário).
+Todos os pacotes são anotados com `@NullMarked`.
 
 ## Processo de trabalho (Skills Técnicas D5)
 1) [Especificar funcionalidade](.agents/skills/especificar-funcionalidade/SKILL.md)
@@ -117,6 +107,12 @@ Além das 5 etapas, o papel [repo-guardian](../.agents/skills/repo-guardian/SKIL
 8) [Desenvolver backend](.agents/skills/desenvolver-backend-d5/SKILL.md)
 9) [Desenvolver frontend](.agents/skills/desenvolver-frontend/SKILL.md)
 
-## Execução
-- Subir aplicação completa (BFF + frontend): `mvn spring-boot:test-run -pl ui-backend`
-- Executar suítes BDD/Cucumber dos módulos de domínio: `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja`
+## Execução e Validação
+- **Ambiente padrão (Backend + PostgreSQL no Docker e Frontend local)**:
+  - Subir `backend` (`:8080`) + `PostgreSQL` (`:5432`) via Docker (a partir da raiz `../`): `docker compose -f tcghub/compose.yaml up --build` (ou `docker compose -f compose.yaml up --build` dentro de `tcghub/`)
+  - Subir frontend (`:4200`, proxy `/backend` → `http://localhost:8080`) em `ui-frontend/src/main/react`: `pnpm dev`
+- **Alternativa D5 em memória (H2)**: `mvn spring-boot:test-run -pl ui-backend`
+- **Compilação de testes Java**: `mvn test-compile`
+- **Suítes BDD / Cucumber**: `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja`
+- **Validação Context Mapper (`.cml`)**: `mvn -q exec:java -f .agents/skills/validar-modelo/scripts/pom.xml -Dexec.args="validate --input docs/<arquivo>.cml"`
+- **Testes e build Frontend** (em `ui-frontend/src/main/react`): `pnpm test` e `pnpm build`
