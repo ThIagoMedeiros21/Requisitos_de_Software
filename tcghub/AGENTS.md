@@ -27,6 +27,10 @@ Toda funcionalidade do sistema deve ser **completa** (operações de escrita, va
 - **Linguagem / Backend**: Java 25, Spring Boot `4.1.1`, Framework D5 `1.0.0-SNAPSHOT`
 - **Persistência / Banco Relacional**: JPA / ORM com **PostgreSQL** (execução do ambiente em Docker) e **H2** (testes `@DataJpaTest`)
 - **Frontend** (`../frontend/`, standalone e desacoplado do reator Maven): React `19.3.0`, Vite `8.3.0`, Tailwind CSS v4 (Design System *Nautical Blue & White Marketplace*, sem Bootstrap e sem Angular), TanStack Query `5.104.0`, React Router `8.5.0`, Zustand, React Hook Form `7.90.0`
+- **Autenticação e Cadastro em Banco (`USR_USUARIO_CONTA`)**: `POST /backend/autenticacao/cadastro` (cria conta com hash de senha e perfil `PCM_PERFIL_COMUNITARIO` automático) e login via banco por usuário ou e-mail em `/backend/autenticacao`
+- **Contratos Oficiais de Integração Externa**:
+  - **One Piece TCG API (`https://optcgapi.com`)**: cartas e decks (`/api/sets/card/{card_set_id}/`, `/api/allSetCards/`, `/api/allDecks/`, `/api/decks/{st_id}/` — campos `card_set_id`, `card_name`, `set_id`, `set_name`, `rarity`, `card_color`, `card_type`, `card_cost`, `card_power`, `sub_types`, `counter_amount`, `attribute`, `market_price`, `inventory_price`, `card_image_id`, `card_image`)
+  - **AnimeThemes API (`https://api.animethemes.moe`)**: aberturas de One Piece (`/anime/one_piece?include=animethemes.song.artists,animethemes.animethemeentries.videos,images` — campos `slug`, `sequence`, `song.title`, `song.artists[].name`, `animethemeentries[].episodes`, `animethemeentries[].videos[].link`, `images[].link`)
 - **Modelagem**: Context Mapper `6.12.0` (`.cml`) e DBML `10.1.1` (`.dbml`)
 - **Qualidade e Testes**: Cucumber `7.34.8`, Mockito `5.23.0`, JSpecify `1.0` (`@NullMarked` obrigatório em todos os pacotes)
 

@@ -4,9 +4,16 @@ Plataforma web de comunidade, catálogo e comércio de cardgames desenvolvida co
 
 ## Estrutura do Repositório
 - `tcghub/` — Monorepo Maven do backend e domínio (`dominio-compartilhado`, `dominio-adm`, `dominio-comunidade`, `dominio-loja`, `aplicacao`, `infraestrutura`, `ui-backend`)
-- `frontend/` — Aplicação web standalone em React + Vite + Tailwind CSS v4 (desacoplada do reator Maven)
+- `frontend/` — Aplicação web standalone em React + Vite + Tailwind CSS v4 (desacoplada do reator Maven), com rotas `/login`, `/cadastro`, `/comunidade/perfil`, `/comunidade/perfil/:id`, `/comunidade/amigos`, `/comunidade/colecionadores`
 - `docs/` — Artefatos de DDD Preliminar, Context Mapper, protótipos, planos, relatórios de auditoria e registros de interação com IA
 - `.agents.md` e `.agents/skills/` — Orquestração e skills especializadas dos agentes
+
+## Autenticação Real e Contratos de APIs Externas
+- **Cadastro e Login Persistidos em PostgreSQL/JPA**:
+  - `POST /backend/autenticacao/cadastro` (tela `/cadastro`): persiste conta em `USR_USUARIO_CONTA` (com hash de senha) e cria automaticamente o `PerfilComunitario` em `PCM_PERFIL_COMUNITARIO`.
+  - `POST /backend/autenticacao` (tela `/login`): autentica contra `USR_USUARIO_CONTA` por nome de usuário ou e-mail.
+- **One Piece TCG API (`https://optcgapi.com`)**: contrato oficial para metadados e imagens de cartas e decks (`card_set_id`, `card_name`, `set_id`, `set_name`, `rarity`, `card_color`, `card_type`, `card_cost`, `card_power`, `sub_types`, `counter_amount`, `attribute`, `market_price`, `inventory_price`, `card_image_id`, `card_image`).
+- **AnimeThemes API (`https://api.animethemes.moe`)**: contrato oficial para aberturas de One Piece (`/anime/one_piece?include=animethemes.song.artists,animethemes.animethemeentries.videos,images` — `slug`, `sequence`, `song.title`, `song.artists[].name`, `animethemeentries[].episodes`, `animethemeentries[].videos[].link`, `images[].link`).
 
 ## Execução do Ambiente Local
 

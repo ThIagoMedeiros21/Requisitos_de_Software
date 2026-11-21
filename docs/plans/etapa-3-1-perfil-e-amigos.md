@@ -175,10 +175,14 @@ Para desacoplar integralmente a camada web do reator Maven (`tcghub/`) e alinhar
   - `components/layout/` (`AppShell`, navegação, notificações, `ErroRota`, `RotaProtegida`)
   - `features/auth/` e `features/community/` (componentes, hooks/queries, tipos e testes por funcionalidade)
   - `routes/` (roteamento com `lazy` e `loader`)
-- **Rotas de Mercado (Frontend)** integradas aos endpoints BFF existentes em `ui-backend` (`/backend/autenticacao`, `/backend/comunidade/perfil-comunitario/...`, `/backend/comunidade/amizade/...`):
-  - `/login`
+- **Rotas de Mercado (Frontend)** integradas aos endpoints BFF existentes em `ui-backend` (`/backend/autenticacao`, `/backend/autenticacao/cadastro`, `/backend/comunidade/perfil-comunitario/...`, `/backend/comunidade/amizade/...`):
+  - `/login` (autenticação por usuário ou e-mail persistida em `USR_USUARIO_CONTA`)
+  - `/cadastro` (`RegisterPage.tsx` → `POST /backend/autenticacao/cadastro`, persistindo `UsuarioContaJpa` em `USR_USUARIO_CONTA` e criando automaticamente o `PerfilComunitario` em `PCM_PERFIL_COMUNITARIO`)
   - `/comunidade/perfil`
   - `/comunidade/perfil/:id`
   - `/comunidade/amigos`
   - `/comunidade/colecionadores`
+- **Contratos Oficiais de Integração Externa**:
+  - **One Piece TCG API (`https://optcgapi.com`)** para cartas e decks (`card_set_id`, `card_name`, `set_id`, `set_name`, `rarity`, `card_color`, `card_type`, `card_cost`, `card_power`, `sub_types`, `counter_amount`, `attribute`, `market_price`, `inventory_price`, `card_image_id`, `card_image`).
+  - **AnimeThemes API (`https://api.animethemes.moe`)** para aberturas de One Piece (`slug`, `sequence`, `song.title`, `song.artists[].name`, `animethemeentries[].episodes`, `animethemeentries[].videos[].link`, `images[].link`).
 

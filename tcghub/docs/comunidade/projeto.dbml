@@ -2,6 +2,14 @@
 // Nota: Referências externas a Usuario, Carta, Deck, Produto e Pedido permanecem desacopladas por identificadores lógicos e SPI/Proxy.
 // A FK ABR_ID referencia ABR_ABERTURA.ABR_ID do subdomínio adm (comunidade Downstream-Upstream adm, sem ciclos).
 
+Table USR_USUARIO_CONTA {
+  USR_ID varchar(100) [pk]
+  USR_EMAIL varchar(150) [not null, unique]
+  USR_SENHA_HASH varchar(255) [not null]
+  USR_AUTORIZACAO varchar(30) [not null]
+  USR_CRIADO_EM timestamp [not null]
+}
+
 Table PCM_PERFIL_COMUNITARIO {
   PCM_ID bigint [pk, increment]
   PCM_USR_ID varchar(100) [not null, unique]

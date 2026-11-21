@@ -279,3 +279,21 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P16** — Cadastro administrativo de abertura | `adm / F001` | Modal em `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN003` | `abertura.feature`: Cadastrar ativa/inativa, Editar dados, Rejeitar sem autorização, Rejeitar número duplicado (cadastro/edição), Rejeitar dados inválidos, Rejeitar edição inexistente |
 | **P17** — Catálogo e ranking de aberturas | `comunidade / F004` | `/comunidade/abertura-preferida` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca |
 | **P18** — Detalhes da abertura preferida | `comunidade / F004` | `/comunidade/abertura-preferida/:id` | `comunidade/F004`: `RN003`, `RN004`, `RN005` | `abertura-preferida.feature`: Consultar detalhes com posição e amigos, Indicar/não indicar/ocultar correspondência no perfil do amigo |
+
+---
+
+## 8. Fluxo de Cadastro/Login Real e Contratos de APIs Externas
+
+### 8.1 Autenticação e Cadastro de Conta (`/login` e `/cadastro`)
+- **Rotas Frontend**: `/login` (`LoginPage.tsx`) e `/cadastro` (`RegisterPage.tsx`) com alternância por abas no card náutico (`Entrar` ↔ `Criar Conta`).
+- **Operações BFF e Persistência (`USR_USUARIO_CONTA` + `PCM_PERFIL_COMUNITARIO`)**:
+  - `POST /backend/autenticacao/cadastro`: recebe `{ usuario, apelido, email, senha, cidade?, descricao? }`, valida unicidade case-insensitive de `usuario`, `email` e `apelido` (`RN001`), grava `UsuarioContaJpa` (`USR_USUARIO_CONTA`) com senha codificada (`PasswordEncoder`) e provisiona automaticamente o `PerfilComunitario` (`PCM_PERFIL_COMUNITARIO`), autenticando a sessão em seguida.
+  - `POST /backend/autenticacao` / `GET /backend/autenticacao`: autentica no banco relacional por `usuario` ou `email`.
+
+### 8.2 Contratos Oficiais de Dados Externos
+- **Cartas e Decks — One Piece TCG API (`https://optcgapi.com`)**:
+  - Endpoints de referência: `/api/sets/card/{card_set_id}/`, `/api/allSetCards/`, `/api/allDecks/`, `/api/decks/{st_id}/`.
+  - Campos exibidos nos cards e modais (`P03`–`P05`, `P07`–`P14`): `card_set_id`, `card_name`, `set_id`, `set_name`, `rarity`, `card_color`, `card_type`, `card_cost`, `card_power`, `sub_types`, `counter_amount`, `attribute`, `market_price`, `inventory_price`, `card_image_id`, `card_image` (com fallback SVG náutico offline).
+- **Aberturas de One Piece — AnimeThemes API (`https://api.animethemes.moe`)**:
+  - Endpoint de referência: `/anime/one_piece?include=animethemes.song.artists,animethemes.animethemeentries.videos,images`.
+  - Campos exibidos em `P15`–`P18`: `slug`, `sequence`, `song.title`, `song.artists[].name`, `animethemeentries[].episodes`, `animethemeentries[].videos[].link`, `images[].link`.
