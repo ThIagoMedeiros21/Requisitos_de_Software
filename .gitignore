@@ -1,6 +1,10 @@
 # Build Maven / Java
 **/target/
 
+# Frontend Node / Vite
+**/node_modules/
+**/dist/
+
 # Variáveis de ambiente
 .env
 .env.*

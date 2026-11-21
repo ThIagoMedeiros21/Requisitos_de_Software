@@ -1,7 +1,7 @@
 **/target/
 .git/
 **/node_modules/
-ui-frontend/src/main/react/dist/
+**/dist/
 .env
 .agents/
 docs/

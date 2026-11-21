@@ -9,7 +9,6 @@ COPY dominio-loja/pom.xml dominio-loja/
 COPY aplicacao/pom.xml aplicacao/
 COPY infraestrutura/pom.xml infraestrutura/
 COPY ui-backend/pom.xml ui-backend/
-COPY ui-frontend/pom.xml ui-frontend/
 
 RUN --mount=type=cache,target=/root/.m2 mvn -B -pl ui-backend -am dependency:go-offline || true
 
