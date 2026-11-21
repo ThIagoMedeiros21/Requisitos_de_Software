@@ -1,7 +1,7 @@
 # Funcionalidades Pendentes — Thiago Medeiros
 
 > [!IMPORTANT]
-> As 4 funcionalidades abaixo pertencem a **Thiago Medeiros** e estão **pendentes de entrega de requisitos detalhados**. Elas **não integram a Onda 1** (BDD/Cucumber) e deverão ser incorporadas quando seus artefatos forem entregues, seguindo o workflow e as travas definidas em [AGENTS.md](../../AGENTS.md).
+> As 4 funcionalidades abaixo pertencem a **Thiago Medeiros** e estão **pendentes de entrega de requisitos detalhados**. Elas **não integram a Onda 1** (BDD/Cucumber) e deverão ser incorporadas quando seus artefatos forem entregues, seguindo o workflow e as travas definidas em [.agents.md](../../.agents.md).
 
 ## Funcionalidades Pendentes
 1. **Gestão do catálogo**

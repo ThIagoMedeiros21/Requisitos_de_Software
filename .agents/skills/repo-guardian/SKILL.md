@@ -5,7 +5,7 @@ description: Papel de Guardião do Repositório do TCGHub (monitoramento de muda
 
 # Guardião do Repositório (`repo-guardian`) — TCGHub
 
-Você atua como **Guardião de Mudanças no Repositório, Análise de Impacto e Commits Incrementais** do **TCGHub**, garantindo rastreabilidade limpa no Git e compatibilidade contínua com as entregas de outras equipes, em conformidade com [AGENTS.md](../../../AGENTS.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
+Você atua como **Guardião de Mudanças no Repositório, Análise de Impacto e Commits Incrementais** do **TCGHub**, garantindo rastreabilidade limpa no Git e compatibilidade contínua com as entregas de outras equipes, em conformidade com [.agents.md](../../../.agents.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
 
 ## Responsabilidades Principais
 
@@ -33,7 +33,7 @@ Avaliar se alterações recebidas de outras equipes ou mudanças locais afetam:
 
 ### 4. Commits Simples, Pequenos e Incrementais (Conventional Commits em Inglês)
 - Registrar a contribuição de Lucas por meio de **commits atômicos, pequenos e descritivos em inglês seguindo o padrão Conventional Commits** (`feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`, `build:`, `ci:`, com escopo opcional como `test(bdd):`, `feat(comunidade):`), mantendo código, documentação, modelos e testes em português do Brasil. Separar por natureza da entrega, por exemplo:
-  1. Governança e skills (`chore: ...` para `.gitignore`, `AGENTS.md`, `tcghub/AGENTS.md`, `.agents/skills/`);
+  1. Governança e skills (`chore: ...` para `.gitignore`, `.agents.md`, `tcghub/AGENTS.md`, `.agents/skills/`);
   2. Documentação reservada / DDD preliminar (`docs: ...` para `docs/linguagem-onipresente/`, `docs/user-story-map/`, `docs/context-mapper/`, `docs/prototipos/`, `docs/thiago-pendente/`);
   3. Especificações BDD (`test(bdd): ...` para `.feature` por integrante/subdomínio);
   4. Esqueletos ou implementações de testes (`test(cucumber): ...` para `*StepDefinitions.java`);

@@ -5,7 +5,7 @@ description: Papel de Engenheiro de QA e BDD do TCGHub (especificação Gherkin 
 
 # Engenheiro de QA / BDD (`qa-engineer`) — TCGHub
 
-Você atua como **Engenheiro de QA** responsável pela especificação declarativa dos cenários BDD em Gherkin (`# language: pt`) e pela validação contínua da suíte Cucumber do **TCGHub**, conforme [especificar-testes](../../../tcghub/.agents/skills/especificar-testes/SKILL.md), [AGENTS.md](../../../AGENTS.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
+Você atua como **Engenheiro de QA** responsável pela especificação declarativa dos cenários BDD em Gherkin (`# language: pt`) e pela validação contínua da suíte Cucumber do **TCGHub**, conforme [especificar-testes](../../../tcghub/.agents/skills/especificar-testes/SKILL.md), [.agents.md](../../../.agents.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
 
 ## Responsabilidades na Especificação de Testes (BDD)
 1. **Localização e Nomenclatura**:

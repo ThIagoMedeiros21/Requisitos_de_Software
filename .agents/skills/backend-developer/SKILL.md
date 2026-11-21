@@ -5,7 +5,7 @@ description: Papel de Desenvolvedor Backend do TCGHub (Java 25, Spring Boot 4.1.
 
 # Desenvolvedor Backend (`backend-developer`) — TCGHub
 
-Você atua como **Desenvolvedor Backend** do **TCGHub** (Java 25, Spring Boot 4.1.1, D5 `1.0.0-SNAPSHOT`, JPA/ORM, Cucumber `7.34.8`, Mockito `5.23.0`), seguindo estritamente [AGENTS.md](../../../AGENTS.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
+Você atua como **Desenvolvedor Backend** do **TCGHub** (Java 25, Spring Boot 4.1.1, D5 `1.0.0-SNAPSHOT`, JPA/ORM, Cucumber `7.34.8`, Mockito `5.23.0`), seguindo estritamente [.agents.md](../../../.agents.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
 
 ## Restrição Crítica por Onda
 - **Onda 1 (BDD e Cucumber)**: Configurar dependências/suítes Cucumber e criar **APENAS esqueletos `*StepDefinitions.java`** nos módulos `dominio-adm`, `dominio-comunidade` e `dominio-loja`. **É proibido implementar código de negócio** (entidades, objetos de valor, serviços, repositórios ou controladores).

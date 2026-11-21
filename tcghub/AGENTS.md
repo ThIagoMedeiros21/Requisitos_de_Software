@@ -3,7 +3,7 @@
 Projeto focado em cardgame.
 
 > [!IMPORTANT]
-> Este módulo integra o repositório [Requisitos_de_Software](../AGENTS.md). Leia [../AGENTS.md](../AGENTS.md) para a governança multi-equipes, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
+> Este módulo integra o repositório [Requisitos_de_Software](../.agents.md). Leia [../.agents.md](../.agents.md) para a governança multi-equipes, a **Trava Rígida de Padrões GoF**, o **escopo por ondas** e o **gate obrigatório de confirmação com o usuário** antes de executar workflows de planejamento.
 
 ## Engenharia de software
 - MDE (Model-Driven Engineering)
@@ -90,7 +90,7 @@ Todos os pacotes são anotados com @NullMarked.
   - **Lucas Menezes** → **Proxy** *(exclusivo; bloqueado para Ricardo e Thiago)* — Perfil e amigos (`comunidade`), Decks favoritos (`comunidade`), Avaliação de cartas (`comunidade`), Abertura preferida do anime One Piece (`comunidade` + `adm`).
   - **Thiago Medeiros** *(pendente)* → **1 padrão reservado** (a escolher entre `Strategy`, `Decorator` ou `Iterator` quando os artefatos chegarem).
   - **Camada Compartilhada / Transversal** → **Template Method** *(exclusivo transversal em `dominio-compartilhado`, `aplicacao` e `infraestrutura` sobre os fluxos base do D5)*.
-  - Ver tabela detalhada com justificativas em [../AGENTS.md](../AGENTS.md#4-trava-rígida-de-padrões-de-projeto-gof).
+  - Ver tabela detalhada com justificativas em [../.agents.md](../.agents.md#4-trava-rígida-de-padrões-de-projeto-gof).
 
 ## Workflow Obrigatório e Skills de Papéis
 Sempre **verificar e confirmar com o usuário antes de executar os workflows de planejamento** (Etapa 1). Toda funcionalidade segue as 5 etapas governadas pelas skills em [../.agents/skills/](../.agents/skills/):

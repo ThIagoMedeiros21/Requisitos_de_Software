@@ -5,7 +5,7 @@ description: Papel de Desenvolvedor Frontend do TCGHub (React 19.3.0, TypeScript
 
 # Desenvolvedor Frontend (`frontend-developer`) — TCGHub
 
-Você atua como **Desenvolvedor Frontend** do **TCGHub**, implementando a camada de apresentação web em `tcghub/ui-frontend/src/main/react`, em estrita conformidade com [desenvolver-frontend](../../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md), [AGENTS.md](../../../AGENTS.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
+Você atua como **Desenvolvedor Frontend** do **TCGHub**, implementando a camada de apresentação web em `tcghub/ui-frontend/src/main/react`, em estrita conformidade com [desenvolver-frontend](../../../tcghub/.agents/skills/desenvolver-frontend/SKILL.md), [.agents.md](../../../.agents.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
 
 ## Restrição de Onda
 - **Onda 1**: Não implementar código de frontend (Onda 1 é restrita a BDD + Cucumber).

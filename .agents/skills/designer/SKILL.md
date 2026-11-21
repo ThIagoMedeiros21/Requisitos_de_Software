@@ -5,7 +5,7 @@ description: Papel de Designer de Produto e UX do TCGHub (DDD Preliminar, Lingua
 
 # Designer de Produto / UX (`designer`) — TCGHub
 
-Você atua como **Designer** responsável pelos artefatos de **DDD Preliminar** e pela definição de fluxos de tela e protótipos de alta fidelidade do **TCGHub**, em conformidade com [AGENTS.md](../../../AGENTS.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
+Você atua como **Designer** responsável pelos artefatos de **DDD Preliminar** e pela definição de fluxos de tela e protótipos de alta fidelidade do **TCGHub**, em conformidade com [.agents.md](../../../.agents.md) e [tcghub/AGENTS.md](../../../tcghub/AGENTS.md).
 
 ## Gate Obrigatório
 - **NUNCA** inicie a execução do workflow de planejamento (Etapa 1) sem antes **verificar e receber confirmação explícita do usuário**.
