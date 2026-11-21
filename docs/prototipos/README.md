@@ -84,10 +84,10 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P12** | Avaliações da comunidade | `21c3501f0e844d2388377f55414687b4` | Seção em `/catalogo/cartas/:id` | `features/community/reviews/ProductReviewsSection.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/pesquisa` |
 | **P13** | Nova avaliação (Modal) | `c10dd91737b54bf49b75fb52fefae957` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/inclusao`, `POST .../incluir` |
 | **P14** | Atualização da avaliação (Modal) | `233e6f9b6f424215954a85c92d59f53e` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET .../:id/alteracao`, `POST .../:id/alterar` |
-| **P15** | Gestão administrativa das aberturas | `b2a45fd86fd84870b32e71fbd1c43fc4` | `/adm/aberturas` | `features/admin/openings/AdminOpeningsPage.tsx`<br>BFF: `GET /backend/adm/abertura/pesquisa`, `POST .../:id/{inativar,reativar,excluir}` |
-| **P16** | Cadastro/edição administrativo de abertura (Modal) | `b2a45fd86fd84870b32e71fbd1c43fc4` (modal *Cadastrar abertura*) | Modal em `/adm/aberturas` | `features/admin/openings/OpeningFormModal.tsx`<br>BFF: `GET/POST /backend/adm/abertura/{inclusao,incluir,:id/alteracao,:id/alterar}` |
-| **P17** | Catálogo e ranking de aberturas | `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d` | `/comunidade/abertura-preferida` | `features/community/openings/OpeningsCatalogPage.tsx`<br>BFF: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking}`, `POST .../{incluir,ocultar,reexibir}` |
-| **P18** | Detalhes da abertura preferida | `eb3be1f6e46e4ad8ae22f2fb8b39731e` | `/comunidade/abertura-preferida/:id` | `features/community/openings/OpeningDetailsPage.tsx`<br>BFF: `GET /backend/comunidade/abertura-preferida/:id/visualizacao` |
+| **P15** | Gestão administrativa das aberturas | `b2a45fd86fd84870b32e71fbd1c43fc4` | `/adm/aberturas` | `features/adm/openings/pages/AdminOpeningsPage.tsx`, `stores/openingsUiStore.ts`<br>BFF: `GET /backend/adm/abertura/pesquisa`, `POST .../{id}/{inativar,reativar,excluir}` |
+| **P16** | Cadastro/edição administrativo de abertura (Modal) | `b2a45fd86fd84870b32e71fbd1c43fc4` (modal *Cadastrar abertura*) | Modal em `/adm/aberturas` | `features/adm/openings/components/AdminOpeningFormModal.tsx`<br>BFF: `POST /backend/adm/abertura/incluir`, `POST .../{id}/alterar` |
+| **P17** | Catálogo, ranking Top 5 e card no perfil | `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d` | `/comunidade/aberturas`<br>Card em `/comunidade/perfil` e `/comunidade/perfil/:id` | `features/community/openings/pages/FavoriteOpeningsPage.tsx`, `components/FavoriteOpeningProfileCard.tsx`, `stores/openingsUiStore.ts`<br>BFF: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking,perfil/:id}`, `POST .../{escolher,ocultar,reexibir}` |
+| **P18** | Detalhes da abertura preferida (Modal/Visualização) | `eb3be1f6e46e4ad8ae22f2fb8b39731e` | Modal em `/comunidade/aberturas` (e `/comunidade/perfil`) | `features/community/openings/components/OpeningDetailsModal.tsx`<br>BFF: `GET /backend/comunidade/abertura-preferida/{id}/visualizacao` |
 
 ---
 
@@ -275,31 +275,79 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 
 ---
 
-## 6. Protótipos de Alta Fidelidade — `adm / F001` e `comunidade / F004`: Abertura Preferida de One Piece
+## 6. Protótipos de Alta Fidelidade — `adm / F001` e `comunidade / F004`: Abertura Preferida de One Piece (Etapa 3.3)
+
+> [!NOTE]
+> Especificação detalhada alinhada ao plano técnico [etapa-3-3-aberturas.md](../plans/etapa-3-3-aberturas.md), ao Design System Stitch *Nautical Blue & White Marketplace* (`projects/18247718655827442438`), ao padrão GoF exclusivo **`Proxy`** (`AberturaPreferidaPrivacidadeProxy`, **zero `Observer`**), ao grafo acíclico **`comunidade → adm`** e ao contrato oficial **`https://api.animethemes.moe`** (`/anime/one_piece?include=animethemes.song.artists,animethemes.animethemeentries.videos,images`).
+
+### 6.1 Inventário de Componentes, Store e Rotas (`frontend/src/`)
+- **Store Zustand (`src/stores/openingsUiStore.ts`)**:
+  - Comunidade: `termoBusca`, `filtroComunidade` (`'todas' | 'amigos' | 'ranking'`), `aberturaDetalheId`, `modalDetalhesAberto`.
+  - Admin: `termoBuscaAdmin`, `filtroStatusAdmin` (`'todas' | 'ativas' | 'inativas'`), `modalAdminAberto`, `aberturaEmEdicao`, `alvoExclusaoAdmin`.
+- **Feature Comunidade (`src/features/community/openings/`)**: `types/openings.types.ts`, `api/openingsApi.ts`, `api/openingsQueries.ts`, `pages/FavoriteOpeningsPage.tsx`, `components/OpeningDetailsModal.tsx`, `components/FavoriteOpeningProfileCard.tsx`.
+- **Feature Admin (`src/features/adm/openings/`)**: `types/adminOpenings.types.ts`, `api/adminOpeningsApi.ts`, `api/adminOpeningsQueries.ts`, `pages/AdminOpeningsPage.tsx`, `components/AdminOpeningFormModal.tsx`.
+- **Navegação (`CommunitySubNav.tsx`, `HeaderNavbar.tsx` e `routes/index.tsx`)**:
+  - Aba **`Abertura Preferida`** em `CommunitySubNav.tsx` apontando para `/comunidade/aberturas` (com redirect legado `/comunidade/abertura-preferida` → `/comunidade/aberturas`).
+  - Item **`Admin • Aberturas`** (`/adm/aberturas`) exibido no cabeçalho **somente** quando `autorizacoesDe('abertura')?.incluir === true` (`ADMINISTRADOR`).
 
 ### Protótipo 15 — Gestão Administrativa das Aberturas (`P15`)
-- **Rota Frontend**: `/adm/aberturas` (Stitch `b2a45fd86fd84870b32e71fbd1c43fc4`).
-- **Operações BFF**: `GET /backend/adm/abertura/pesquisa`, `POST /backend/adm/abertura/:id/{inativar,reativar,excluir}`.
-- **Layout**: Visível apenas para `ADMINISTRADOR`; breadcrumb `Início > Mídia & Catálogo > Aberturas de One Piece`, botão `+ Cadastrar abertura`, pílulas `Todas (N)`, `Ativas (N)`, `Inativas (N)`, busca por número/nome, tabela com cabeçalho `bg-deep-navy text-pure-white` (`MÍDIA`, `Nº`, `NOME DA ABERTURA`, `ARTISTA`, `EPISÓDIOS`, `PREFERÊNCIAS`, `STATUS`, `AÇÕES`) e paginação.
-- **Regras**: Rejeita exclusão física quando `preferencias > 0`, orientando o uso de `Inativar`.
+- **Tela Stitch**: `b2a45fd86fd84870b32e71fbd1c43fc4` (*TCGHub Admin - Gerenciamento de Aberturas de One Piece*).
+- **Rota Frontend**: `/adm/aberturas` (`AdminOpeningsPage.tsx`, protegida por papel `ADMINISTRADOR`).
+- **Operações BFF**: `GET /backend/adm/abertura/pesquisa?termo=&status=`, `GET /backend/adm/abertura/{id}/visualizacao`, `POST /backend/adm/abertura/{id}/{inativar,reativar,excluir}`.
+- **Layout e Tokens Stitch**:
+  - Breadcrumb `Início > Mídia & Catálogo > Aberturas de One Piece`, título `Aberturas` (`font-headline-lg text-deep-navy`), subtítulo `"Gerenciamento do catálogo oficial de temas musicais de One Piece"` e botão primário `+ Cadastrar abertura` (`bg-ocean-blue hover:bg-deep-navy text-pure-white`).
+  - Pílulas de filtro com contadores dinâmicos: `Todas (N)`, `Ativas (N)` e `Inativas (N)` (ativo em `bg-deep-navy text-pure-white`, padrão em `bg-surface-container-low text-secondary`) + busca `"Buscar por número, nome ou artista (ex: Hope, 20)..."`.
+  - Tabela (`bg-pure-white rounded-xl border border-ice-border shadow-sm`) com cabeçalho `bg-deep-navy text-pure-white` e colunas: `MÍDIA` (miniatura 16:9 com fallback náutico), `Nº` (`#01` em `font-tabular-stat`), `NOME DA ABERTURA`, `ARTISTA`, `EPISÓDIOS`, `PREFERÊNCIAS` (contagem de escolhas na comunidade), `STATUS` (`• Ativa` em `bg-status-positive-bg text-status-positive-text` / `• Inativa` em `bg-status-warning-bg text-status-warning-text`), `AÇÕES` (`Editar`, `Inativar` / `Reativar`, `Excluir`).
+- **Regras, Alerta `RN006` e Estados**:
+  - **Proteção contra exclusão (`adm/F001 RN006`)**: Quando `preferencias > 0`, a ação `Excluir` exibe alerta informativo claro no modal de confirmação (e rejeição no backend `409`/`400`): `"Esta abertura já foi escolhida por usuários na comunidade e não pode ser excluída — utilize a opção Inativar para preservar as escolhas existentes."`
+  - **Autorização (`RN002`)**: Acesso direto por usuário `USUARIO` (sem `ADMINISTRADOR`) exibe estado de acesso restrito (`403`) sem expor controles de escrita.
+  - **Vazio / Carregamento**: Skeleton de tabela durante carregamento; estado vazio `"Nenhuma abertura encontrada para os filtros selecionados."`.
 
-### Protótipo 16 — Cadastro Administrativo de Abertura (`P16`)
-- **Rota Frontend**: Modal em `/adm/aberturas`.
-- **Operações BFF**: `GET/POST /backend/adm/abertura/{inclusao,incluir,:id/alteracao,:id/alterar}`.
-- **Campos (`React Hook Form`)**: `Número da Abertura *` (`> 0`, único), `Nome da Abertura *`, `Artista / Intérprete *`, `Ep. Inicial *`, `Ep. Final *`, `URL da Imagem de Capa (Aspecto 16:9)` + botão `Testar` + caixa de prévia, `Referência de Vídeo Público (YouTube / URL)`, checkbox `Ativa para novas escolhas`, botões `Cancelar` e `Cadastrar abertura`.
+### Protótipo 16 — Modal Administrativo Criar/Editar Abertura (`P16`)
+- **Tela Stitch**: `b2a45fd86fd84870b32e71fbd1c43fc4` (modal *Cadastrar abertura*).
+- **Rota Frontend**: Modal `AdminOpeningFormModal.tsx` em `/adm/aberturas`.
+- **Operações BFF**: `POST /backend/adm/abertura/incluir` e `POST /backend/adm/abertura/{id}/alterar`.
+- **Campos (`React Hook Form` + Contrato `api.animethemes.moe`)**:
+  - `Número da Abertura *` (`sequence`, inteiro `> 0`, único — `RN003`).
+  - `Nome da Abertura *` (`song.title`, obrigatório — ex.: `"We Are!"`).
+  - `Artista / Intérprete *` (`song.artists[].name`, obrigatório — ex.: `"Hiroshi Kitadani"`).
+  - `Episódios de Exibição *` (`animethemeentries[].episodes`, obrigatório — ex.: `"1 a 47"`).
+  - `URL da Imagem de Capa (Aspecto 16:9)` (`images[].link`) + botão **`Testar Prévia`** + caixa de pré-visualização 16:9 com fallback náutico caso a URL falhe.
+  - `URL de Vídeo Público (AnimeThemes / YouTube)` (`videos[].link`).
+  - Checkbox `Ativa para novas escolhas` (`ativa: true | false`).
+  - Rodapé: `Cancelar` (ghost) e `Cadastrar abertura` / `Salvar alterações` (`bg-ocean-blue text-pure-white`).
+- **Validações e Erros**: Rejeita número `<= 0` ou campos obrigatórios vazios (`text-error`); número duplicado na inclusão ou edição retorna `409` publicado no `#tcg-toast` (`bg-error-container text-on-error-container`).
 
-### Protótipo 17 — Catálogo e Ranking de Aberturas (`P17`)
-- **Rota Frontend**: `/comunidade/abertura-preferida` (Stitch `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d`).
-- **Operações BFF**: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking}`, `POST /backend/comunidade/abertura-preferida/{incluir,ocultar,reexibir}`.
-- **Layout**:
-  - **Banner Superior**: Abertura atualmente escolhida (`Op. 01 — We Are!`), contagem de amigos, botão `Ver Detalhes` e switch `Exibir no Perfil Público`.
-  - **Catálogo Ativo (Esquerda)**: Busca por nome, número ou artista; pílulas `Todas as Aberturas`, `Escolhidas por Amigos`, `Top Ranking`; grid apenas com aberturas **`ATIVAS`**, mostrando capa 16:9, votos, amigos, botão `Definir como Preferida` / `✓ Ativa no Perfil` e ícone de privacidade.
-  - **Sidebar Direita (`RANKING DA COMUNIDADE — Top 5 Escolhas Oficiais`)**: `Total de Votos Ativos`, barras proporcionais `#1`–`#5` com percentual e contagem, e aviso de que escolhas ocultas somam no cálculo sem expor o usuário (`AberturaPreferidaPrivacidadeProxy`).
+### Protótipo 17 — Página `/comunidade/aberturas` (Catálogo Ativo, Ranking Top 5) e Card no Perfil (`P17`)
+- **Telas Stitch**: `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d` (*Aberturas de One Piece & Ranking Oficial*) e integração no Perfil (`a20513d71abd449ba2b482f6bcc24089` / `9b383bb48db94fe485d3e71979323c57`).
+- **Rotas Frontend**: `/comunidade/aberturas` (`FavoriteOpeningsPage.tsx`) + Card integrado em `/comunidade/perfil` e `/comunidade/perfil/:id` (`FavoriteOpeningProfileCard.tsx`).
+- **Operações BFF**: `GET /backend/comunidade/abertura-preferida/pesquisa?termo=&filtro=`, `GET /backend/comunidade/abertura-preferida/ranking`, `GET /backend/comunidade/abertura-preferida/perfil/{perfilId}`, `POST /backend/comunidade/abertura-preferida/escolher`, `POST .../ocultar`, `POST .../reexibir`.
+- **Layout da Página `/comunidade/aberturas`**:
+  - **Banner Superior da Preferência Atual**: Miniatura 16:9, badge `ABERTURA ESCOLHIDA` + `X amigos também escolheram`, título `Op. 01 — We Are!`, artista • episódios, badge `Inativa para novas escolhas` (caso a abertura atual tenha sido inativada no `adm` — `RN006`, preservada até substituição), botão `Ver Detalhes` e **Toggle `Exibir no Perfil Público`** (`role="switch"`, controla `APR_VISIVEL_NO_PERFIL` via `POST /ocultar` e `POST /reexibir`).
+  - **Área Principal (Esquerda — Catálogo de Aberturas Ativas)**:
+    - Busca em tempo real: `"Filtrar por nome, número ou artista..."` (`RN001`).
+    - Pílulas de filtro: `Todas as Aberturas`, `Escolhidas por Amigos`, `Top Ranking`.
+    - Grid apenas com aberturas **`ATIVAS`** (`bg-pure-white rounded-xl border border-ice-border shadow-sm`): capa 16:9 (fallback SVG náutico), badges `★ SUA PREFERIDA` / `#N NO RANKING` / `Op. XX`, título, artista • episódios, contagem de votos e **contagem de amigos que escolheram cada abertura** (`X amigos`), botão **`Escolher como Preferida`** (`bg-ocean-blue hover:bg-deep-navy text-pure-white`) ou estado `✓ Ativa no Perfil`, e botão de abrir detalhes (`P18`).
+  - **Sidebar Direita (`RANKING DA COMUNIDADE — Top 5 Escolhas Oficiais`)**:
+    - Card `Total de Votos Ativos` (`font-tabular-stat`), lista ordenada `#1` a `#5` com barra proporcional (`bg-ocean-blue`), percentual exato (ex.: `40,0%`) e quantidade de votos (`RN004`).
+    - Nota de privacidade: `"Preferências ocultas no perfil público somam normalmente no cálculo proporcional sem expor a identidade do usuário."`
+    - **Estado Vazio do Ranking**: Exibe `Total de Votos Ativos: 0` e mensagem `"Nenhuma escolha registrada na comunidade ainda."`
+- **Card da Abertura Preferida no Perfil Comunitário (`FavoriteOpeningProfileCard.tsx`)**:
+  - **Visão do Proprietário (`/comunidade/perfil`)**: Exibe capa 16:9, `Op. XX — <Nome>`, artista, episódios, player/link de vídeo AnimeThemes, toggle de visibilidade pública (`Oculto no perfil público` / `Visível no perfil público`) e atalho `Trocar Abertura` (`/comunidade/aberturas`).
+  - **Visão de Visitante / Amigo (`/comunidade/perfil/:id`, mediado por `AberturaPreferidaPrivacidadeProxy`)**:
+    - Se pública: exibe a abertura, link/player AnimeThemes e, quando o visitante é amigo com a mesma abertura preferida, exibe badge destacado **`Mesma abertura preferida que você!`** (`bg-status-positive-bg text-status-positive-text`, `RN005`).
+    - Se oculta (`visivelNoPerfil === false`): o Proxy omite completamente a abertura e **não** exibe correspondência pública (`RN003`, `RN005`).
 
-### Protótipo 18 — Detalhes da Abertura Preferida (`P18`)
-- **Rota Frontend**: `/comunidade/abertura-preferida/:id` (Stitch `eb3be1f6e46e4ad8ae22f2fb8b39731e`).
-- **Operações BFF**: `GET /backend/comunidade/abertura-preferida/:id/visualizacao`.
-- **Layout**: Hero cinematográfico com capa, número, arco/episódios, artista, botão `▶ Assistir Abertura`, botão `☆ Sua Preferida (Ativa)` e 3 cards inferiores (`Amigos que Escolheram` filtrado pelo `AberturaPreferidaPrivacidadeProxy`, `Posição Global` no ranking e `Cronologia do Anime`).
+### Protótipo 18 — Modal de Detalhes da Abertura Preferida (`P18`)
+- **Tela Stitch**: `eb3be1f6e46e4ad8ae22f2fb8b39731e` (*Detalhes da Abertura — Modo Foco*).
+- **Rota Frontend**: Modal `OpeningDetailsModal.tsx` aberto em `/comunidade/aberturas` ou a partir do card no Perfil.
+- **Operação BFF**: `GET /backend/comunidade/abertura-preferida/{id}/visualizacao`.
+- **Layout e Componentes**:
+  - Hero 16:9 com capa (ou fallback SVG náutico), overlay escuro, badge `OP. XX`, título, artista • episódios, **player embutido/link oficial de vídeo (`AnimeThemes`)** (`▶ Assistir Abertura`) e CTA `Escolher como Preferida` / `★ Sua Preferida (Ativa)` + toggle de visibilidade pública quando for a escolha do usuário.
+  - 3 cards informativos inferiores:
+    1. **`Amigos que Escolheram`**: Contagem total + apelidos dos amigos com visibilidade pública (filtrados pelo `AberturaPreferidaPrivacidadeProxy`, sem jamais vazar amigos com escolha oculta).
+    2. **`Posição Global`**: `#N no Ranking Oficial` + votos e percentual.
+    3. **`Cronologia do Anime`**: Faixa de episódios (`Ep. 1 a 47`) e status administrativo.
 
 ---
 
@@ -325,8 +373,8 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P14** — Atualização da avaliação | `comunidade / F003` | Modal em `/minha-colecao` / `/catalogo/cartas/:id` | `comunidade/F003`: `RN002`, `RN003`, `RN005` | `avaliacao-de-cartas.feature`: Reavaliar sem duplicar contagem, Cancelar edição preserva anterior, Rejeitar alteração de outro usuário, Manter válida se houver outra compra |
 | **P15** — Gestão administrativa das aberturas | `adm / F001` | `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN004`, `RN005`, `RN006` | `abertura.feature`: Consultar por número, Pesquisar/filtrar por status, Inativar, Reativar, Excluir nunca escolhida, Rejeitar exclusão de já escolhida, Rejeitar sem autorização `ADMINISTRADOR` |
 | **P16** — Cadastro administrativo de abertura | `adm / F001` | Modal em `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN003` | `abertura.feature`: Cadastrar ativa/inativa, Editar dados, Rejeitar sem autorização, Rejeitar número duplicado (cadastro/edição), Rejeitar dados inválidos, Rejeitar edição inexistente |
-| **P17** — Catálogo e ranking de aberturas | `comunidade / F004` | `/comunidade/abertura-preferida` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca |
-| **P18** — Detalhes da abertura preferida | `comunidade / F004` | `/comunidade/abertura-preferida/:id` | `comunidade/F004`: `RN003`, `RN004`, `RN005` | `abertura-preferida.feature`: Consultar detalhes com posição e amigos, Indicar/não indicar/ocultar correspondência no perfil do amigo |
+| **P17** — Catálogo, ranking Top 5 e card no perfil | `comunidade / F004` | `/comunidade/aberturas`, `/comunidade/perfil`, `/comunidade/perfil/:id` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca, Correspondência no perfil do amigo |
+| **P18** — Detalhes da abertura preferida | `comunidade / F004` | Modal em `/comunidade/aberturas` (e `/comunidade/perfil`) | `comunidade/F004`: `RN003`, `RN004`, `RN005` | `abertura-preferida.feature`: Consultar detalhes com posição e amigos, Indicar/não indicar/ocultar correspondência no perfil do amigo |
 
 ---
 
