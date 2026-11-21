@@ -23,7 +23,7 @@ Você atua como **Desenvolvedor Frontend** do **TCGHub**, implementando a aplica
      - `src/routes/` (definição de rotas com `lazy`, `loader` e `ErrorBoundary`).
    - Rotas de mercado limpas e semânticas (ex.: `/login`, `/comunidade/perfil`, `/comunidade/perfil/:id`, `/comunidade/amigos`, `/comunidade/colecionadores`), consumindo os endpoints BFF `/backend/...` do `tcghub/ui-backend`.
 2. **Estado, Estilização e Integração BFF (`TanStack Query` + `Zustand` + `Tailwind CSS v4`)**:
-   - Toda chamada HTTP ao backend usa o cliente centralizado (`chamarApi` em `src/lib/`), com prefixo `/backend` (proxy Vite `:4200` → `:8080`).
+   - Toda chamada HTTP ao backend usa o cliente centralizado (`chamarApi` em `src/lib/`), com prefixo `/backend` (proxy Vite `:5173` → `:8080`).
    - Estado servidor/cache via **TanStack Query** (`5.104.0`): operações `GET` com `queryOptions`, pré-carregamento no `loader` via `ensureQueryData`, leitura com `useSuspenseQuery`, mutações com `useMutation` e invalidação via `invalidateQueries`.
    - Estado global/UI do cliente (modais, filtros de busca, slot selecionado, abas ativas, confirmação bilateral) gerenciado com **Zustand** (sem duplicar cache remoto do TanStack Query).
    - Estilização exclusiva com **Tailwind CSS v4** e tokens Stitch (`tokens.css` / `globals.css`), mantendo fidelidade visual aos HTMLs/protótipos do Stitch e zero dependência de Bootstrap.

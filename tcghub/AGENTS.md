@@ -109,7 +109,7 @@ Todos os pacotes são anotados com `@NullMarked`.
 ## Execução e Validação
 - **Ambiente padrão (Backend + PostgreSQL no Docker e Frontend local)**:
   - Subir `backend` (`:8080`) + `PostgreSQL` (`:5432`) via Docker (a partir da raiz `../`): `docker compose -f tcghub/compose.yaml up --build` (ou `docker compose -f compose.yaml up --build` dentro de `tcghub/`)
-  - Subir frontend (`:4200`, proxy `/backend` → `http://localhost:8080`) em `../frontend`: `pnpm dev`
+  - Subir frontend (`:5173`, proxy `/backend` → `http://localhost:8080`) em `../frontend`: `pnpm dev`
 - **Alternativa backend em memória (H2)**: `mvn spring-boot:test-run -pl ui-backend`
 - **Compilação de testes Java**: `mvn test-compile`
 - **Suítes BDD / Cucumber**: `mvn test -pl dominio-adm,dominio-comunidade,dominio-loja`

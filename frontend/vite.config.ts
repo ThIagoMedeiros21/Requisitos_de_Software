@@ -5,7 +5,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 4200,
+    port: 5173,
     proxy: {
       '/backend': { target: 'http://localhost:8080', secure: false },
     },

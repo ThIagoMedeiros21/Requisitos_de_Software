@@ -17,7 +17,7 @@
   - `src/features/auth/` — Autenticação (`/login`, contexto de sessão e `RequireAuth`).
   - `src/features/community/` — Componentes, hooks TanStack Query e formulários de `PerfilComunitario`, `Amizade`, `DeckFavorito`, `AvaliacaoProduto` e `AberturaPreferida`.
   - `src/routes/` — Mapeamento de rotas de mercado em React Router (`lazy` + `ErrorBoundary`).
-- **Integração com BFF (`/backend/...`)**: O servidor Vite (`pnpm dev` na porta `5173`/`4200`) faz proxy para o `ui-backend` Spring Boot (`http://localhost:8080/backend/...`), preservando os endpoints REST do BFF sem acoplar o roteamento visual do React às convenções internas de backend.
+- **Integração com BFF (`/backend/...`)**: O servidor Vite (`pnpm dev` na porta `5173`) faz proxy para o `ui-backend` Spring Boot (`http://localhost:8080/backend/...`), preservando os endpoints REST do BFF sem acoplar o roteamento visual do React às convenções internas de backend.
 
 ### 1.2 Tabela Completa de Tokens CSS — *Nautical Blue & White Marketplace*
 

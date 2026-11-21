@@ -167,7 +167,7 @@ Durante a execução da implementação (Etapa 3.1), o `@repo-guardian` consolid
 
 Para desacoplar integralmente a camada web do reator Maven (`tcghub/`) e alinhar a interface ao Design System oficial do projeto (**Nautical Blue & White Marketplace**, extraído do Stitch `projects/18247718655827442438`), a arquitetura frontend evolui de `tcghub/ui-frontend` para o projeto standalone **`/frontend/`** na raiz do repositório, **sem Bootstrap e sem Angular**:
 
-- **Localização e Build**: `/frontend/` (React `19.3.0`, Vite `8.3.0`, Tailwind CSS v4 via `@tailwindcss/vite`, TanStack Query `5.104.0`, React Router `8.5.0`, Zustand, React Hook Form `7.90.0`, Vitest + Testing Library), executado com `pnpm dev` na porta `4200` com proxy `/backend` → `http://localhost:8080`.
+- **Localização e Build**: `/frontend/` (React `19.3.0`, Vite `8.3.0`, Tailwind CSS v4 via `@tailwindcss/vite`, TanStack Query `5.104.0`, React Router `8.5.0`, Zustand, React Hook Form `7.90.0`, Vitest + Testing Library), executado com `pnpm dev` na porta `5173` com proxy `/backend` → `http://localhost:8080`.
 - **Estrutura Feature-Based em `/frontend/src/`**:
   - `styles/` (`tokens.css` com `:root` + `@theme` Tailwind v4 e `globals.css`)
   - `lib/` (`api.ts` com `chamarApi`, `queryClient.ts`, utilitários de autenticação/erros)

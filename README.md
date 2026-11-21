@@ -29,7 +29,7 @@ pnpm install
 pnpm dev
 ```
 
-- Executa o servidor de desenvolvimento Vite na porta **`4200`** (`http://localhost:4200`), encaminhando automaticamente chamadas `/backend` para `http://localhost:8080` via proxy configurado em `frontend/vite.config.ts`.
+- Executa o servidor de desenvolvimento Vite na porta **`5173`** (`http://localhost:5173`), encaminhando automaticamente chamadas `/backend` para `http://localhost:8080` via proxy configurado em `frontend/vite.config.ts`.
 
 ### 3. Testes Automatizados
 - **Suítes BDD / Cucumber (H2 / Mockito)** em `tcghub/`:
