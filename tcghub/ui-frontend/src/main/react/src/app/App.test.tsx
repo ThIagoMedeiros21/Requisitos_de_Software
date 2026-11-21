@@ -32,15 +32,23 @@ describe('App', () => {
     expect(document.querySelector('.navbar-brand')).toHaveTextContent('Tcghub');
   });
 
-  it('mostra o início para o usuário autenticado', async () => {
+  it('mostra o início para o usuário autenticado e exibe menu conforme autorizações', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => Response.json({ usuario: 'maria' })),
+      vi.fn(async () =>
+        Response.json({
+          usuario: 'maria',
+          perfilComunitario: { incluir: true, buscar: true, alterar: true, excluir: false },
+          amizade: { incluir: true, buscar: true, alterar: true, excluir: true },
+        }),
+      ),
     );
 
     renderizar('/');
 
     expect(await screen.findByText('maria')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sair' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Meu Perfil' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Amigos' })).toBeInTheDocument();
   });
 });

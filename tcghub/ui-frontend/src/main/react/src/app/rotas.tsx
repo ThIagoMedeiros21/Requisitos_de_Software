@@ -26,6 +26,66 @@ export const rotas = [
             path: 'inicio',
             lazy: async () => ({ Component: (await import('./inicio/Inicio')).Inicio }),
           },
+          {
+            path: 'comunidade/perfil-comunitario/visualizacao',
+            lazy: async () => {
+              const [{ PerfilVisualizacao }, { carregarProprioPerfil }] = await Promise.all([
+                import('./comunidade/perfil/PerfilVisualizacao'),
+                import('./comunidade/perfil/perfilConsultas'),
+              ]);
+              return { Component: PerfilVisualizacao, loader: carregarProprioPerfil };
+            },
+          },
+          {
+            path: 'comunidade/perfil-comunitario/:id/visualizacao',
+            lazy: async () => {
+              const [{ PerfilVisualizacao }, { carregarPerfilPorId }] = await Promise.all([
+                import('./comunidade/perfil/PerfilVisualizacao'),
+                import('./comunidade/perfil/perfilConsultas'),
+              ]);
+              return { Component: PerfilVisualizacao, loader: carregarPerfilPorId };
+            },
+          },
+          {
+            path: 'comunidade/perfil-comunitario/:id/alteracao',
+            lazy: async () => {
+              const [{ PerfilEdicao }, { carregarPerfilAlteracao }] = await Promise.all([
+                import('./comunidade/perfil/PerfilEdicao'),
+                import('./comunidade/perfil/perfilConsultas'),
+              ]);
+              return { Component: PerfilEdicao, loader: carregarPerfilAlteracao };
+            },
+          },
+          {
+            path: 'comunidade/amizade/pesquisa',
+            lazy: async () => {
+              const [{ AmizadePesquisa }, { carregarRedeAmizades }] = await Promise.all([
+                import('./comunidade/amizade/AmizadePesquisa'),
+                import('./comunidade/amizade/amizadeConsultas'),
+              ]);
+              return { Component: AmizadePesquisa, loader: carregarRedeAmizades };
+            },
+          },
+          {
+            path: 'comunidade/amizade/inclusao',
+            lazy: async () => {
+              const [{ AmizadeInclusao }, { carregarColecionadores }] = await Promise.all([
+                import('./comunidade/amizade/AmizadeInclusao'),
+                import('./comunidade/amizade/amizadeConsultas'),
+              ]);
+              return { Component: AmizadeInclusao, loader: carregarColecionadores };
+            },
+          },
+          {
+            path: 'comunidade/amizade/:id/visualizacao',
+            lazy: async () => {
+              const [{ AmizadeVisualizacao }, { carregarAmizadePorId }] = await Promise.all([
+                import('./comunidade/amizade/AmizadeVisualizacao'),
+                import('./comunidade/amizade/amizadeConsultas'),
+              ]);
+              return { Component: AmizadeVisualizacao, loader: carregarAmizadePorId };
+            },
+          },
         ],
       },
     ],

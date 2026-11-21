@@ -4,8 +4,10 @@ import { Notificacoes } from '../d5/bootstrap/Notificacoes';
 import { ReautenticacaoProvider } from '../d5/bootstrap/ReautenticacaoProvider';
 
 export function App() {
-  const { autenticado } = useAutenticacao();
+  const { autenticado, autorizacoesDe } = useAutenticacao();
   const navegar = useNavigate();
+  const podeBuscarPerfil = Boolean(autorizacoesDe('perfilComunitario')?.buscar);
+  const podeBuscarAmizade = Boolean(autorizacoesDe('amizade')?.buscar);
 
   async function aoSair() {
     await sair();
@@ -23,7 +25,20 @@ export function App() {
             {autenticado && (
               <div className="navbar-collapse show">
                 <ul className="navbar-nav">
-                  {/* Um item de menu por agregado, protegido por autorizacoesDe('agregado')?.buscar */}
+                  {podeBuscarPerfil && (
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/comunidade/perfil-comunitario/visualizacao">
+                        Meu Perfil
+                      </Link>
+                    </li>
+                  )}
+                  {podeBuscarAmizade && (
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/comunidade/amizade/pesquisa">
+                        Amigos
+                      </Link>
+                    </li>
+                  )}
                 </ul>
                 <ul className="navbar-nav ms-auto">
                   <li className="nav-item">
