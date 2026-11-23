@@ -91,6 +91,27 @@ export const rotas = [
             },
           },
           {
+            path: 'comunidade/avaliacoes',
+            lazy: async () => {
+              const [{ CardReviewsCatalogPage }, { carregarCatalogoAvaliacoes }] = await Promise.all([
+                import('../features/community/reviews/pages/CardReviewsCatalogPage'),
+                import('../features/community/reviews/api/reviewsQueries'),
+              ]);
+              return { Component: CardReviewsCatalogPage, loader: carregarCatalogoAvaliacoes };
+            },
+          },
+          {
+            path: 'comunidade/avaliacoes/:produtoId',
+            lazy: async () => {
+              const [{ CardReviewDetailPage }, { carregarDetalhesAvaliacoesCarta }] =
+                await Promise.all([
+                  import('../features/community/reviews/pages/CardReviewDetailPage'),
+                  import('../features/community/reviews/api/reviewsQueries'),
+                ]);
+              return { Component: CardReviewDetailPage, loader: carregarDetalhesAvaliacoesCarta };
+            },
+          },
+          {
             path: 'comunidade/aberturas',
             lazy: async () => {
               const [{ FavoriteOpeningsPage }, { carregarAberturasComunidade }] = await Promise.all([
@@ -108,6 +129,10 @@ export const rotas = [
             }),
           },
           // Compatibilidade com caminhos legados D5
+          {
+            path: 'comunidade/avaliacao-produto/pesquisa',
+            element: <Navigate to="/comunidade/avaliacoes" replace />,
+          },
           {
             path: 'comunidade/abertura-preferida',
             element: <Navigate to="/comunidade/aberturas" replace />,

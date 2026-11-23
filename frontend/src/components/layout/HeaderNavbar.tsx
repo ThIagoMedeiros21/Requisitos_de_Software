@@ -65,6 +65,12 @@ export function HeaderNavbar() {
                   Decks
                 </Link>
                 <Link
+                  to="/comunidade/avaliacoes"
+                  className="rounded-lg px-3 py-1.5 font-label-md text-label-md text-on-surface-variant no-underline transition-colors hover:bg-surface-container-low hover:text-on-surface"
+                >
+                  Avaliações
+                </Link>
+                <Link
                   to="/comunidade/perfil"
                   aria-current="page"
                   className="relative rounded-lg bg-primary px-3 py-1.5 font-label-md text-label-md font-bold text-pure-white no-underline shadow-sm transition-colors"
@@ -222,6 +228,14 @@ export function HeaderNavbar() {
               >
                 <Icon nome="view_carousel" className="text-[18px]" />
                 Decks Favoritos
+              </Link>
+              <Link
+                to="/comunidade/avaliacoes"
+                onClick={() => definirGavetaAberta(false)}
+                className="flex items-center gap-2 rounded-xl px-3.5 py-2.5 font-label-md text-label-md font-semibold text-deep-navy no-underline hover:bg-surface-container-low"
+              >
+                <Icon nome="rate_review" className="text-[18px]" />
+                Avaliações de Cartas
               </Link>
               <Link
                 to="/comunidade/amigos"

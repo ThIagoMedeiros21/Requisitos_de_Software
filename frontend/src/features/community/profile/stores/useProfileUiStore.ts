@@ -3,6 +3,7 @@ import { create } from 'zustand';
 export type AbaComunidade =
   | 'meu-perfil'
   | 'decks-favoritos'
+  | 'avaliacoes'
   | 'rede-amigos'
   | 'buscar-colecionadores'
   | 'abertura-preferida';

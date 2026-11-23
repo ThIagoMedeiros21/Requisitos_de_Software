@@ -51,6 +51,15 @@ export function CommunitySubNav({
           <span>Decks Favoritos</span>
         </Link>
 
+        <Link
+          to="/comunidade/avaliacoes"
+          onClick={() => definirAbaAtiva('avaliacoes')}
+          className={classeAba(abaAtiva === 'avaliacoes')}
+        >
+          <Icon nome="rate_review" className="text-[18px]" />
+          <span>Avaliações</span>
+        </Link>
+
         <button
           type="button"
           onClick={() => publicar('info', 'Navegando para Minha Coleção...')}
