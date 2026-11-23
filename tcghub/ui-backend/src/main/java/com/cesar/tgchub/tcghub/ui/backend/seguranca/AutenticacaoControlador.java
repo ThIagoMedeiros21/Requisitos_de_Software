@@ -21,6 +21,7 @@ import com.cesar.tgchub.tcghub.dominio.UsuarioIdentificador;
 import com.cesar.tgchub.tcghub.dominio.adm.abertura.AberturaServico;
 import com.cesar.tgchub.tcghub.dominio.comunidade.aberturapreferida.AberturaPreferidaServico;
 import com.cesar.tgchub.tcghub.dominio.comunidade.amizade.AmizadeServico;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.AvaliacaoProdutoServico;
 import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckFavoritoServico;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.Apelido;
 import com.cesar.tgchub.tcghub.dominio.comunidade.perfil.PerfilComunitario;
@@ -45,6 +46,7 @@ public class AutenticacaoControlador extends AutenticacaoControladorAbstrato {
 	private final DeckFavoritoServico deckFavoritoServico;
 	private final AberturaServico aberturaServico;
 	private final AberturaPreferidaServico aberturaPreferidaServico;
+	private final AvaliacaoProdutoServico avaliacaoProdutoServico;
 	private final IUsuarioContaRepositorio contaRepositorio;
 	private final IPerfilComunitarioRepositorio perfilRepositorio;
 	private final PasswordEncoder codificadorSenha;
@@ -52,14 +54,16 @@ public class AutenticacaoControlador extends AutenticacaoControladorAbstrato {
 	public AutenticacaoControlador(ISegurancaServico segurancaServico,
 			PerfilComunitarioServico perfilComunitarioServico, AmizadeServico amizadeServico,
 			DeckFavoritoServico deckFavoritoServico, AberturaServico aberturaServico,
-			AberturaPreferidaServico aberturaPreferidaServico, IUsuarioContaRepositorio contaRepositorio,
-			IPerfilComunitarioRepositorio perfilRepositorio, PasswordEncoder codificadorSenha) {
+			AberturaPreferidaServico aberturaPreferidaServico, AvaliacaoProdutoServico avaliacaoProdutoServico,
+			IUsuarioContaRepositorio contaRepositorio, IPerfilComunitarioRepositorio perfilRepositorio,
+			PasswordEncoder codificadorSenha) {
 		super(segurancaServico);
 		this.perfilComunitarioServico = Objects.requireNonNull(perfilComunitarioServico);
 		this.amizadeServico = Objects.requireNonNull(amizadeServico);
 		this.deckFavoritoServico = Objects.requireNonNull(deckFavoritoServico);
 		this.aberturaServico = Objects.requireNonNull(aberturaServico);
 		this.aberturaPreferidaServico = Objects.requireNonNull(aberturaPreferidaServico);
+		this.avaliacaoProdutoServico = Objects.requireNonNull(avaliacaoProdutoServico);
 		this.contaRepositorio = Objects.requireNonNull(contaRepositorio);
 		this.perfilRepositorio = Objects.requireNonNull(perfilRepositorio);
 		this.codificadorSenha = Objects.requireNonNull(codificadorSenha);
@@ -72,8 +76,9 @@ public class AutenticacaoControlador extends AutenticacaoControladorAbstrato {
 		var deckFavorito = deckFavoritoServico.criarAutorizacoes(Optional.empty());
 		var abertura = aberturaServico.criarAutorizacoes(Optional.empty());
 		var aberturaPreferida = aberturaPreferidaServico.criarAutorizacoes(Optional.empty());
+		var avaliacaoProduto = avaliacaoProdutoServico.criarAutorizacoes(Optional.empty());
 		return new AutenticacaoRecurso(segurancaServico.getUsuario(), perfilComunitario, amizade, deckFavorito,
-				abertura, aberturaPreferida);
+				abertura, aberturaPreferida, avaliacaoProduto);
 	}
 
 	@PostMapping("cadastro")

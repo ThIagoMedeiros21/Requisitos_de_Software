@@ -22,6 +22,16 @@ import com.cesar.tgchub.tcghub.dominio.comunidade.aberturapreferida.AberturaPref
 import com.cesar.tgchub.tcghub.dominio.comunidade.aberturapreferida.IAberturaPreferidaPrivacidadeProxy;
 import com.cesar.tgchub.tcghub.dominio.comunidade.aberturapreferida.spi.IAberturaPreferidaRepositorio;
 import com.cesar.tgchub.tcghub.dominio.comunidade.amizade.spi.IAmizadeRepositorio;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.AvaliacaoElegibilidadeProxy;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.AvaliacaoProduto;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.AvaliacaoProdutoServico;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.IAvaliacaoElegibilidadeProxy;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.NotaAvaliacao;
+import com.cesar.tgchub.tcghub.dominio.comunidade.avaliacaoproduto.spi.IAvaliacaoProdutoRepositorio;
+import com.cesar.tgchub.tcghub.dominio.comunidade.compraverificada.CompraVerificada;
+import com.cesar.tgchub.tcghub.dominio.comunidade.compraverificada.PedidoIdentificador;
+import com.cesar.tgchub.tcghub.dominio.comunidade.compraverificada.ProdutoIdentificador;
+import com.cesar.tgchub.tcghub.dominio.comunidade.compraverificada.spi.ICompraVerificadaRepositorio;
 import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.CatalogoDeckProxy;
 import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckFavorito;
 import com.cesar.tgchub.tcghub.dominio.comunidade.deckfavorito.DeckIdentificador;
@@ -59,10 +69,17 @@ public class ComunidadeConfiguracao {
 	}
 
 	@Bean
+	IAvaliacaoElegibilidadeProxy avaliacaoElegibilidadeProxy(AvaliacaoProdutoServico servico,
+			ICompraVerificadaRepositorio compraVerificadaRepositorio) {
+		return new AvaliacaoElegibilidadeProxy(servico, compraVerificadaRepositorio);
+	}
+
+	@Bean
 	ApplicationRunner inicializadorPerfisComunidade(IUsuarioContaRepositorio contaRepositorio,
 			IPerfilComunitarioRepositorio perfilRepositorio, IDeckFavoritoRepositorio deckFavoritoRepositorio,
 			IAberturaRepositorio aberturaRepositorio, IAberturaPreferidaRepositorio aberturaPreferidaRepositorio,
-			PasswordEncoder codificadorSenha) {
+			ICompraVerificadaRepositorio compraVerificadaRepositorio,
+			IAvaliacaoProdutoRepositorio avaliacaoProdutoRepositorio, PasswordEncoder codificadorSenha) {
 		return args -> {
 			criarContaEPerfilSeAusente(contaRepositorio, perfilRepositorio, codificadorSenha, "lucas",
 					"lucas@tcghub.com", "lucas", Autorizacao.USUARIO, "LuffyBR", "Recife",
@@ -88,7 +105,47 @@ public class ComunidadeConfiguracao {
 			criarAberturaPreferidaSeAusente(aberturaRepositorio, aberturaPreferidaRepositorio, "lucas", 1);
 			criarAberturaPreferidaSeAusente(aberturaRepositorio, aberturaPreferidaRepositorio, "ricardo", 1);
 			criarAberturaPreferidaSeAusente(aberturaRepositorio, aberturaPreferidaRepositorio, "thiago", 22);
+
+			criarComprasEAvaliacoesIniciaisSeAusentes(compraVerificadaRepositorio, avaliacaoProdutoRepositorio);
 		};
+	}
+
+	private static void criarComprasEAvaliacoesIniciaisSeAusentes(ICompraVerificadaRepositorio compraRepositorio,
+			IAvaliacaoProdutoRepositorio avaliacaoRepositorio) {
+		registrarCompraSeAusente(compraRepositorio, "lucas", "PED-100", "OP05-119", true, false);
+		registrarCompraSeAusente(compraRepositorio, "lucas", "PED-101", "OP01-001", true, false);
+		registrarCompraSeAusente(compraRepositorio, "lucas", "PED-102", "OP01-016", true, false);
+		registrarCompraSeAusente(compraRepositorio, "ricardo", "PED-200", "OP05-119", true, false);
+		registrarCompraSeAusente(compraRepositorio, "ricardo", "PED-201", "OP01-025", false, false);
+		registrarCompraSeAusente(compraRepositorio, "thiago", "PED-300", "OP05-119", true, true);
+
+		registrarAvaliacaoSeAusente(avaliacaoRepositorio, "lucas", "OP05-119", 5,
+				"Carta chegou impecável, centralização perfeita e foil brilhante!");
+		registrarAvaliacaoSeAusente(avaliacaoRepositorio, "ricardo", "OP05-119", 4,
+				"Excelente condição Near Mint, envio super protegido.");
+		registrarAvaliacaoSeAusente(avaliacaoRepositorio, "lucas", "OP01-001", 5,
+				"Líder clássico indispensável para decks agressivos vermelhos.");
+	}
+
+	private static void registrarCompraSeAusente(ICompraVerificadaRepositorio compraRepositorio, String usuario,
+			String pedido, String produto, boolean paga, boolean reembolsada) {
+		var u = new UsuarioIdentificador(usuario);
+		var ped = new PedidoIdentificador(pedido);
+		var prod = new ProdutoIdentificador(produto);
+		if (!compraRepositorio.existePorUsuarioEPedidoEProduto(u, ped, prod)) {
+			compraRepositorio.incluir(new CompraVerificada(Optional.empty(), u, prod, ped, paga, reembolsada,
+					Instant.now()));
+		}
+	}
+
+	private static void registrarAvaliacaoSeAusente(IAvaliacaoProdutoRepositorio avaliacaoRepositorio, String usuario,
+			String produto, int nota, String comentario) {
+		var u = new UsuarioIdentificador(usuario);
+		var prod = new ProdutoIdentificador(produto);
+		if (!avaliacaoRepositorio.existePorUsuarioEProduto(u, prod)) {
+			avaliacaoRepositorio.incluir(new AvaliacaoProduto(Optional.empty(), u, prod, new NotaAvaliacao(nota),
+					Optional.of(comentario), true, true, Instant.now()));
+		}
 	}
 
 	private static void criarAberturasOficiaisSeAusentes(IAberturaRepositorio aberturaRepositorio) {
