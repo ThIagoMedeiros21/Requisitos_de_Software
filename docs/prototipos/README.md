@@ -79,11 +79,11 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P07** | Lista de decks favoritos | `a778927205374bb68481d5bb1f1dc11d` | `/comunidade/decks-favoritos` | `features/community/decks/pages/FavoriteDecksPage.tsx`, `stores/decksUiStore.ts`<br>BFF: `GET /backend/comunidade/deck-favorito/pesquisa`, `POST .../{deckId}/excluir`, `POST .../ocultar`, `POST .../reexibir` |
 | **P08** | Adicionar deck favorito (Modal/Drawer) | `a778927205374bb68481d5bb1f1dc11d` (modal *Adicionar Deck Favorito*) | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil` | `features/community/decks/components/AddFavoriteDeckModal.tsx`<br>BFF: `GET /backend/comunidade/deck-favorito/catalogo?termo=&cor=`, `POST /backend/comunidade/deck-favorito/incluir` |
 | **P09** | Composição do deck favorito (Modal) | `d26c9d5f978f422fa021153ec9cfe885` | Modal em `/comunidade/decks-favoritos` e `/comunidade/perfil/:id` | `features/community/decks/components/DeckCompositionModal.tsx`, `utils/bandaiExport.ts`<br>BFF: `GET /backend/comunidade/deck-favorito/{deckId}/composicao` |
-| **P10** | Coleção pessoal como entrada da avaliação | `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090` | `/minha-colecao` *(entrada de apoio)* | `features/community/reviews/CollectionReviewEntryCard.tsx` |
-| **P11** | Detalhes da carta e avaliações | `21c3501f0e844d2388377f55414687b4` | `/catalogo/cartas/:id` *(entrada de apoio)* | `features/community/reviews/ProductReviewsSection.tsx` |
-| **P12** | Avaliações da comunidade | `21c3501f0e844d2388377f55414687b4` | Seção em `/catalogo/cartas/:id` | `features/community/reviews/ProductReviewsSection.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/pesquisa` |
-| **P13** | Nova avaliação (Modal) | `c10dd91737b54bf49b75fb52fefae957` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/inclusao`, `POST .../incluir` |
-| **P14** | Atualização da avaliação (Modal) | `233e6f9b6f424215954a85c92d59f53e` | Modal em `/minha-colecao` ou `/catalogo/cartas/:id` | `features/community/reviews/ReviewFormModal.tsx`<br>BFF: `GET .../:id/alteracao`, `POST .../:id/alterar` |
+| **P10** | Catálogo/Coleção como entrada de avaliações | `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090` | `/comunidade/avaliacoes` | `features/community/reviews/pages/CardReviewsCatalogPage.tsx`, `stores/reviewsUiStore.ts`<br>BFF: `GET /backend/comunidade/avaliacao-produto/catalogo?termo=` |
+| **P11** | Detalhes da carta e avaliações | `21c3501f0e844d2388377f55414687b4` | `/comunidade/avaliacoes/:produtoId` | `features/community/reviews/pages/CardReviewDetailPage.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/{produtoId}/pesquisa` |
+| **P12** | Avaliações da comunidade (média, distribuição e selo) | `21c3501f0e844d2388377f55414687b4` | `/comunidade/avaliacoes/:produtoId` | `features/community/reviews/components/StarRating.tsx`, `RatingDistributionBars.tsx`<br>BFF: `GET /backend/comunidade/avaliacao-produto/{produtoId}/pesquisa`, `POST .../compras/registrar`, `POST .../compras/{pedidoId}/reembolsar` |
+| **P13** | Nova avaliação (Modal) | `c10dd91737b54bf49b75fb52fefae957` | Modal em `/comunidade/avaliacoes` e `/comunidade/avaliacoes/:produtoId` | `features/community/reviews/components/ReviewFormModal.tsx`<br>BFF: `POST /backend/comunidade/avaliacao-produto/{produtoId}/avaliar` |
+| **P14** | Atualização da avaliação (Modal) | `233e6f9b6f424215954a85c92d59f53e` | Modal em `/comunidade/avaliacoes` e `/comunidade/avaliacoes/:produtoId` | `features/community/reviews/components/ReviewFormModal.tsx`<br>BFF: `POST /backend/comunidade/avaliacao-produto/{produtoId}/avaliar` |
 | **P15** | Gestão administrativa das aberturas | `b2a45fd86fd84870b32e71fbd1c43fc4` | `/adm/aberturas` | `features/adm/openings/pages/AdminOpeningsPage.tsx`, `stores/openingsUiStore.ts`<br>BFF: `GET /backend/adm/abertura/pesquisa`, `POST .../{id}/{inativar,reativar,excluir}` |
 | **P16** | Cadastro/edição administrativo de abertura (Modal) | `b2a45fd86fd84870b32e71fbd1c43fc4` (modal *Cadastrar abertura*) | Modal em `/adm/aberturas` | `features/adm/openings/components/AdminOpeningFormModal.tsx`<br>BFF: `POST /backend/adm/abertura/incluir`, `POST .../{id}/alterar` |
 | **P17** | Catálogo, ranking Top 5 e card no perfil | `4734db8f5e32474ca6da6c27f95b7ada` / `8a09531ad18f495bbc2f422ed9d3f34d` | `/comunidade/aberturas`<br>Card em `/comunidade/perfil` e `/comunidade/perfil/:id` | `features/community/openings/pages/FavoriteOpeningsPage.tsx`, `components/FavoriteOpeningProfileCard.tsx`, `stores/openingsUiStore.ts`<br>BFF: `GET /backend/comunidade/abertura-preferida/{pesquisa,ranking,perfil/:id}`, `POST .../{escolher,ocultar,reexibir}` |
@@ -246,32 +246,68 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 
 ---
 
-## 5. Protótipos de Alta Fidelidade — `comunidade / F003`: Avaliação de Cartas
+## 5. Protótipos de Alta Fidelidade — `comunidade / F003`: Avaliação de Cartas (Etapa 3.4)
 
-### Protótipo 10 — Coleção Pessoal como Entrada da Avaliação (`P10`)
-- **Rota Frontend**: `/minha-colecao` (entrada de apoio — Stitch `7e79485c587349ceab386d8665df5bbc` / `8bd5dfb86e354c6ab97f7f7e8b426090`).
-- **Layout**: Cards da coleção exibindo nota comunitária (`4.9 (42)` ou `Sem avaliações`), badge `(Sua: 5.0)` + ícone editar (abre `P14`) ou atalho `Avaliar` (abre `P13`).
+> [!NOTE]
+> Especificação detalhada alinhada ao plano técnico [etapa-3-4-avaliacao-de-cartas.md](../plans/etapa-3-4-avaliacao-de-cartas.md), ao Design System Stitch *Nautical Blue & White Marketplace* (`projects/18247718655827442438`, zero Bootstrap), ao padrão GoF exclusivo **`Proxy`** (`AvaliacaoElegibilidadeProxy`, **zero `Observer`** inclusive na invalidação por reembolso da `RN005`), à projeção local desacoplada **`CompraVerificada`** (`CVE_COMPRA_VERIFICADA`) e ao contrato oficial **`https://optcgapi.com`**.
+
+### 5.1 Inventário de Componentes, Store e Rotas (`frontend/src/`)
+- **Store Zustand (`src/stores/reviewsUiStore.ts`)**: `termoBusca`, `filtroElegibilidade` (`'todas' | 'elegiveis' | 'avaliadas'`), `produtoModalAberto: string | null`, `modalAvaliacaoAberto: boolean`, `notaHover: number | null`, `painelPedidosAberto: boolean`, ações e `resetarEstadoUi()`.
+- **Feature (`src/features/community/reviews/`)**: `types/reviews.types.ts`, `api/reviewsApi.ts`, `api/reviewsQueries.ts` (`queryOptions` + `useSuspenseQuery` + `useMutation` invalidando `['comunidade', 'avaliacao-produto']`), `pages/CardReviewsCatalogPage.tsx`, `pages/CardReviewDetailPage.tsx`, `components/ReviewFormModal.tsx`, `components/StarRating.tsx`, `components/RatingDistributionBars.tsx`.
+- **Navegação (`CommunitySubNav.tsx` e `routes/index.tsx`)**: adiciona a aba **`Avaliações`** (`/comunidade/avaliacoes`), a rota de detalhe `/comunidade/avaliacoes/:produtoId` e o redirect legado `/comunidade/avaliacao-produto/pesquisa` → `/comunidade/avaliacoes`.
+
+### Protótipo 10 — Vitrine de Cartas e Entrada da Avaliação (`P10`)
+- **Telas Stitch**: `7e79485c587349ceab386d8665df5bbc` (*Minha Coleção & Progresso*) / `8bd5dfb86e354c6ab97f7f7e8b426090` (*Avaliar Cartas*).
+- **Rota Frontend**: `/comunidade/avaliacoes` (`CardReviewsCatalogPage.tsx`).
+- **Operação BFF**: `GET /backend/comunidade/avaliacao-produto/catalogo?termo=`.
+- **Layout e Tokens Stitch**:
+  - `CommunitySubNav` com aba `Avaliações` ativa (`bg-deep-navy text-pure-white`).
+  - Barra de busca por nome ou código (`OP05-119`, `OP01-001`) + pílulas de filtro (`Todas`, `Elegíveis para Avaliar`, `Minhas Avaliações`).
+  - Grid responsivo (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md`) de cards `bg-pure-white rounded-xl border border-ice-border p-space-sm shadow-sm`:
+    - Imagem `aspect-[2.5/3.5]` via `optcgapi.com` (com fallback SVG náutico), chips de raridade (`bg-deep-navy text-pure-white`) e cor, código `card_set_id`, nome (`font-headline-sm`), preço (`font-tabular-price`);
+    - Linha de resumo comunitário: `StarRating` + média com 1 casa decimal e contagem (`★ 4.5 (2)`) ou estado neutro `☆ Sem avaliações (0.0)`;
+    - Ação contextual de avaliação: se o usuário já avaliou, badge `(Sua: 5.0)` + botão `Editar` (abre `P14`); se `podeAvaliar === true`, botão primário `Avaliar` (`bg-ocean-blue text-pure-white`, abre `P13`); se não elegível, badge informativo `Requer compra paga` + link `Ver Avaliações` (`/comunidade/avaliacoes/:produtoId`).
 
 ### Protótipo 11 — Detalhes da Carta e Avaliações (`P11`)
-- **Rota Frontend**: `/catalogo/cartas/:id` (entrada de apoio — Stitch `21c3501f0e844d2388377f55414687b4`).
-- **Layout**: Ficha da carta (especificações, preço, estoque, gráfico de mercado) conectada ao bloco inferior `Avaliações da Comunidade` (`P12`) com botão `Avaliar Carta` / `Editar Minha Avaliação`.
+- **Tela Stitch**: `21c3501f0e844d2388377f55414687b4` (*Detalhes da Carta*).
+- **Rota Frontend**: `/comunidade/avaliacoes/:produtoId` (`CardReviewDetailPage.tsx`).
+- **Operação BFF**: `GET /backend/comunidade/avaliacao-produto/{produtoId}/pesquisa`.
+- **Layout e Componentes**:
+  - Link `← Voltar para Avaliações` (`/comunidade/avaliacoes`).
+  - Ficha superior da carta (`optcgapi.com`): imagem em destaque (`aspect-[2.5/3.5]`), badges `rarity` / `set_id`, título `card_name` (`font-headline-lg text-deep-navy`), atributos (`TIPO`, `COR`, `PODER`, `CUSTO`), `market_price` em `font-tabular-price` e resumo rápido `★ 4.5 (2 avaliações válidas)`.
+  - Seção inferior `Avaliações da Comunidade` (`P12`) + **Painel colapsável de Compras Verificadas (`CompraVerificada`)** para demonstração integrada: exibe os pedidos do usuário autenticado para aquela carta (`Pago`, `Pendente`, `Reembolsado`), permitindo registrar compra paga/pendente (`POST /compras/registrar`) ou reembolsar (`POST /compras/{pedidoId}/reembolsar`) e observar a atualização imediata de elegibilidade (`RN001`) e invalidação/recálculo de média (`RN005`) sem uso de `Observer`.
 
 ### Protótipo 12 — Avaliações da Comunidade (`P12`)
-- **Rota Frontend**: Seção integrada em `/catalogo/cartas/:id`.
-- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/pesquisa?produtoId=...`.
-- **Layout**: Card esquerdo com média em destaque (`4.9` ou `0.0`), 5 estrelas e total de avaliações válidas; histograma `5★` a `1★` à direita; lista de comentários com selo obrigatório **`Compra Verificada`** (`bg-status-positive-bg text-status-positive-text`), data e nota.
-- **Regras**: Avaliações cujo único pedido elegível foi reembolsado deixam de constar na média e na lista automaticamente.
+- **Tela Stitch**: `21c3501f0e844d2388377f55414687b4` (seção *Avaliações da Comunidade*).
+- **Rota Frontend**: Seção integrada em `/comunidade/avaliacoes/:produtoId` (`StarRating.tsx` + `RatingDistributionBars.tsx`).
+- **Layout e Tokens Stitch**:
+  - Cabeçalho `Avaliações da Comunidade` + botão CTA `Avaliar Carta` (ou `Editar Minha Avaliação` quando `minhaAvaliacao != null`).
+  - **Card Resumo (Esquerda)**: fundo `bg-surface-container-low rounded-xl p-space-lg`, média grande em `font-display-lg text-deep-navy tabular-nums` (`4.5` ou `0.0`), 5 estrelas (`StarRating`), `"Baseado em X avaliações válidas"` (`RN004`) e, quando existente, `"• Sua nota: 5.0"` + botão `Editar Minha Avaliação`.
+  - **Histograma (`RatingDistributionBars.tsx` — Direita)**: 5 barras (`5 ★` a `1 ★`) preenchidas em `bg-ocean-blue` sobre trilho `bg-surface-container` com contagem tabular à direita.
+  - **Lista de Avaliações Válidas**: Cada item (`bg-pure-white rounded-xl border border-ice-border p-space-md`) exibe apelido do autor, **selo obrigatório `✓ Compra Verificada`** (`bg-status-positive-bg text-status-positive-text`, ícone `verified`, `RN006`), data relativa, estrelas e comentário (quando informado).
+- **Estados**:
+  - **Vazio (0 avaliações)**: Exibe média `0.0`, `0 avaliações válidas`, histograma zerado e mensagem `"Esta carta ainda não possui avaliações da comunidade."`
+  - **Invalidação por Reembolso (`RN005`)**: Quando o único pedido válido é reembolsado, a avaliação deixa de constar na lista pública e a média/histograma é recalculada automaticamente (mantendo-se visível caso exista outro pedido pago e não reembolsado).
 
 ### Protótipo 13 — Nova Avaliação (`P13`)
-- **Rota Frontend**: Modal `Avaliar Carta` (Stitch `c10dd91737b54bf49b75fb52fefae957`).
-- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/inclusao` e `POST /backend/comunidade/avaliacao-produto/incluir`.
-- **Campos (`React Hook Form`)**: Seletor interativo de **1 a 5 estrelas** obrigatório (`1 <= nota <= 5`), campo opcional `Seu Comentário (opcional)`, botões `Cancelar` e `Salvar Avaliação`.
-- **Proxy (`AvaliacaoElegibilidadeProxy`)**: Valida `CompraVerificada` (ao menos um pedido pago e não reembolsado); bloqueia sem compra, pagamento pendente ou único pedido reembolsado.
+- **Tela Stitch**: `c10dd91737b54bf49b75fb52fefae957` (*Modal Adicionar Avaliação*).
+- **Rota Frontend**: Modal `ReviewFormModal.tsx` (modo criação) aberto de `P10` ou `P11`/`P12`.
+- **Operação BFF**: `POST /backend/comunidade/avaliacao-produto/{produtoId}/avaliar` (`{ nota, comentario? }`).
+- **Campos e Validações (`React Hook Form` + `AvaliacaoElegibilidadeProxy`)**:
+  - Resumo da carta (`card_set_id`, `card_name`, cor, `market_price`) e média atual da comunidade.
+  - Seletor interativo de **1 a 5 estrelas** (`notaHover` via `reviewsUiStore`, obrigatório `1 <= nota <= 5`, legenda dinâmica `"1 estrela"`..`"5 estrelas"` — `RN003`).
+  - Campo opcional `Seu Comentário (opcional)` (`textarea` até 1000 caracteres).
+  - Rodapé: `Cancelar` (ghost, descarta rascunho sem enviar requisição) e `Salvar Avaliação` (`bg-ocean-blue hover:bg-deep-navy text-pure-white`, desabilitado enquanto nenhuma nota válida `1..5` for selecionada).
+  - **Proteção Proxy (`RN001`)**: Se o usuário não possuir compra paga e não reembolsada (`!podeAvaliar`), exibe alerta em `bg-status-warning-bg text-status-warning-text` e qualquer submissão direta é rejeitada pelo `AvaliacaoElegibilidadeProxy` (`bg-error-container text-on-error-container` no `#tcg-toast`).
 
 ### Protótipo 14 — Atualização da Avaliação (`P14`)
-- **Rota Frontend**: Modal `Sua Avaliação da Carta` (Stitch `233e6f9b6f424215954a85c92d59f53e`).
-- **Operações BFF**: `GET /backend/comunidade/avaliacao-produto/:id/alteracao` e `POST /backend/comunidade/avaliacao-produto/:id/alterar`.
-- **Layout e Regras**: Exibe nota atual (`Avaliação Enviada 5.0 ★`), data, estrelas editáveis, comentário editável, `Cancelar` (preserva versão anterior) e `Atualizar Avaliação`. Atualiza de forma idempotente sem duplicar contagem na média; `AvaliacaoElegibilidadeProxy` impede edição por outro usuário (`403`).
+- **Tela Stitch**: `233e6f9b6f424215954a85c92d59f53e` (*Modal de Avaliação / Edição*).
+- **Rota Frontend**: Modal `ReviewFormModal.tsx` (modo edição) aberto de `P10` ou `P11`/`P12`.
+- **Operação BFF**: `POST /backend/comunidade/avaliacao-produto/{produtoId}/avaliar` (`{ nota, comentario? }`).
+- **Layout e Regras (`RN002`, `RN003`, `RN005`)**:
+  - Cabeçalho `Sua Avaliação da Carta`, badge `✓ Avaliação Enviada` + nota atual (`5.0 ★`) + data, estrelas pré-preenchidas e editáveis, campo `Seu Comentário` pré-preenchido (`Editável`).
+  - Botão **`Cancelar`** fecha o modal descartando alterações não salvas e **preservando integralmente a nota e comentário anteriores** (`RN002`).
+  - Botão **`Atualizar Avaliação`** atualiza o registro existente de forma idempotente (sem duplicar contagem na média); `AvaliacaoElegibilidadeProxy` bloqueia tentativas de alterar avaliação de outro usuário (`403`) ou após reembolso de todas as compras elegíveis.
 
 ---
 
@@ -366,11 +402,11 @@ Fonte oficial: Stitch (`projects/18247718655827442438/screens/908471363216766298
 | **P07** — Lista de decks favoritos | `comunidade / F002` | `/comunidade/decks-favoritos` | `comunidade/F002`: `RN001`, `RN002`, `RN004`, `RN005` | `decks-favoritos.feature`: Remover deck libera vaga, Rejeitar remoção de não favorito, Preservar deck tornado inativo, Ocultar/reexibir, Rejeitar gestão de outro usuário |
 | **P08** — Adicionar deck favorito | `comunidade / F002` | Modal em `/comunidade/decks-favoritos` | `comunidade/F002`: `RN001`, `RN002`, `RN005` | `decks-favoritos.feature`: Pesquisar decks disponíveis, Adicionar até 4, Rejeitar 5º deck, Rejeitar duplicata, Rejeitar deck inativo/inexistente |
 | **P09** — Composição do deck favorito | `comunidade / F002` | Modal em `/comunidade/decks-favoritos` | `comunidade/F002`: `RN003` | `decks-favoritos.feature`: Visualizar composição via interface do Catálogo, Tratar indisponibilidade do Catálogo |
-| **P10** — Coleção pessoal (entrada avaliação) | `comunidade / F003` *(apoio)* | `/minha-colecao` | `comunidade/F003`: `RN001`, `RN002` | `avaliacao-de-cartas.feature`: Registrar avaliação, Reavaliar carta existente |
-| **P11** — Detalhes da carta e avaliações | `comunidade / F003` *(apoio)* | `/catalogo/cartas/:id` | `comunidade/F003`: `RN001`, `RN004`, `RN006` | `avaliacao-de-cartas.feature`: Consultar média e contagem no catálogo |
-| **P12** — Avaliações da comunidade | `comunidade / F003` | Seção em `/catalogo/cartas/:id` | `comunidade/F003`: `RN004`, `RN005`, `RN006` | `avaliacao-de-cartas.feature`: Média e contagem, Carta sem avaliações (`0.0`), Selo compra verificada, Invalidação e recálculo após reembolso |
-| **P13** — Nova avaliação | `comunidade / F003` | Modal em `/minha-colecao` / `/catalogo/cartas/:id` | `comunidade/F003`: `RN001`, `RN003`, `RN006` | `avaliacao-de-cartas.feature`: Registrar avaliação (com/sem comentário, nota 1–5), Rejeitar sem compra/não pago/reembolsado, Permitir se houver outro pedido pago, Rejeitar nota `<1` ou `>5` |
-| **P14** — Atualização da avaliação | `comunidade / F003` | Modal em `/minha-colecao` / `/catalogo/cartas/:id` | `comunidade/F003`: `RN002`, `RN003`, `RN005` | `avaliacao-de-cartas.feature`: Reavaliar sem duplicar contagem, Cancelar edição preserva anterior, Rejeitar alteração de outro usuário, Manter válida se houver outra compra |
+| **P10** — Vitrine/Coleção como entrada de avaliações | `comunidade / F003` | `/comunidade/avaliacoes` | `comunidade/F003`: `RN001`, `RN002`, `RN004` | `avaliacao-de-cartas.feature`: Registrar avaliação, Reavaliar carta existente, Consultar resumo sem avaliações |
+| **P11** — Detalhes da carta e avaliações | `comunidade / F003` | `/comunidade/avaliacoes/:produtoId` | `comunidade/F003`: `RN001`, `RN004`, `RN005`, `RN006` | `avaliacao-de-cartas.feature`: Consultar média e contagem no catálogo, Reembolso invalidando ou mantendo avaliação |
+| **P12** — Avaliações da comunidade | `comunidade / F003` | `/comunidade/avaliacoes/:produtoId` | `comunidade/F003`: `RN004`, `RN005`, `RN006` | `avaliacao-de-cartas.feature`: Média e contagem, Carta sem avaliações (`0.0`), Selo compra verificada, Invalidação e recálculo após reembolso |
+| **P13** — Nova avaliação | `comunidade / F003` | Modal em `/comunidade/avaliacoes` e `/comunidade/avaliacoes/:produtoId` | `comunidade/F003`: `RN001`, `RN003`, `RN006` | `avaliacao-de-cartas.feature`: Registrar avaliação (com/sem comentário, nota 1–5), Rejeitar sem compra/não pago/reembolsado, Permitir se houver outro pedido pago, Rejeitar nota `<1` ou `>5` |
+| **P14** — Atualização da avaliação | `comunidade / F003` | Modal em `/comunidade/avaliacoes` e `/comunidade/avaliacoes/:produtoId` | `comunidade/F003`: `RN002`, `RN003`, `RN005` | `avaliacao-de-cartas.feature`: Reavaliar sem duplicar contagem, Cancelar edição preserva anterior, Rejeitar alteração de outro usuário, Manter válida se houver outra compra |
 | **P15** — Gestão administrativa das aberturas | `adm / F001` | `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN004`, `RN005`, `RN006` | `abertura.feature`: Consultar por número, Pesquisar/filtrar por status, Inativar, Reativar, Excluir nunca escolhida, Rejeitar exclusão de já escolhida, Rejeitar sem autorização `ADMINISTRADOR` |
 | **P16** — Cadastro administrativo de abertura | `adm / F001` | Modal em `/adm/aberturas` | `adm/F001`: `RN001`, `RN002`, `RN003` | `abertura.feature`: Cadastrar ativa/inativa, Editar dados, Rejeitar sem autorização, Rejeitar número duplicado (cadastro/edição), Rejeitar dados inválidos, Rejeitar edição inexistente |
 | **P17** — Catálogo, ranking Top 5 e card no perfil | `comunidade / F004` | `/comunidade/aberturas`, `/comunidade/perfil`, `/comunidade/perfil/:id` | `comunidade/F004`: `RN001`, `RN002`, `RN003`, `RN004`, `RN005`, `RN006` | `abertura-preferida.feature`: Listar apenas ativas com contagem de amigos, Pesquisar por nome/artista, Escolher/substituir preferida, Rejeitar inativa/inexistente, Ocultar/reexibir, Ranking Top 5 (com ocultas e vazio), Manter escolha inativada e permitir troca, Correspondência no perfil do amigo |

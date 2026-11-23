@@ -79,11 +79,33 @@ flowchart LR
 | **US-18** | `RN004` | Ocultar decks favoritos no perfil público sem perder lista; Reexibir decks favoritos no perfil público | `P06`, `P07` |
 | **US-19**, **US-19b** | `RN002`, `RN005` | Deck tornado inativo não fica disponível para novas escolhas; Rejeitar gestão de decks favoritos de outro usuário | `P07`, `P08` |
 
-### 3.3 `comunidade / F003` — Avaliação de Cartas
+### 3.3 `comunidade / F003` — Avaliação de Cartas (Detalhamento Etapa 3.4)
 
-| Atividade | Fatia 1 — Avaliar e Reavaliar | Fatia 2 — Elegibilidade e Selo de Confiança | Fatia 3 — Média Comunitária e Reembolso |
+> [!NOTE]
+> Detalhamento operacional da **Etapa 3.4 (`comunidade / F003 — Avaliação de cartas`)** alinhado ao frontend standalone `/frontend/` (Design System Stitch *Nautical Blue & White Marketplace*, `projects/18247718655827442438`), ao desacoplamento total de `dominio-loja` via projeção local **`CompraVerificada`** (`CVE_COMPRA_VERIFICADA`), ao padrão GoF exclusivo **`Proxy`** (`AvaliacaoElegibilidadeProxy`, **zero `Observer`** inclusive na invalidação por reembolso da `RN005`), ao contrato **`https://optcgapi.com`** e aos **16 cenários BDD** de [avaliacao-de-cartas.feature](../../tcghub/dominio-comunidade/src/test/resources/features/avaliacao-de-cartas.feature).
+
+```mermaid
+flowchart LR
+    R1["1. Consultar Cartas e Resumo de Avaliacoes (/comunidade/avaliacoes)"] --> R2["2. Verificar Elegibilidade via CompraVerificada e Proxy"]
+    R2 --> R3["3. Registrar Avaliacao (Nota 1-5 + Comentario Opcional)"]
+    R3 --> R4["4. Exibir Selo Compra Verificada e Distribuicao 5★-1★"]
+    R4 --> R5["5. Reavaliar ou Cancelar Edicao Preservando Estado"]
+    R5 --> R6["6. Invalidar Avaliacao e Recalcular Media apos Reembolso"]
+```
+
+| Atividade | Fatia 1 — Escrita: Avaliar e Reavaliar (`P13`, `P14`) | Fatia 2 — Elegibilidade Proxy e Selo (`P10`, `P11`, `P12`) | Fatia 3 — Média Comunitária, Reembolso e Segurança (`P12`, `P14`) |
 | :--- | :--- | :--- | :--- |
-| **Avaliação por Compradores** | **US-20**: Como comprador, quero acessar `Avaliar` na minha coleção ou `Avaliar Carta` na página do produto (`/comunidade/avaliacao-produto/inclusao`) e registrar nota de **1 a 5** e comentário opcional.<br>**US-21**: Como comprador, quero editar minha avaliação existente (`/comunidade/avaliacao-produto/:id/alteracao`) atualizando nota ou comentário (ou cancelar preservando o estado anterior) sem duplicar minha contagem. | **US-22**: Como sistema, quero validar via `AvaliacaoElegibilidadeProxy` e projeção `CompraVerificada` que apenas usuários com ao menos um **pedido pago e não reembolsado** daquela carta podem avaliá-la.<br>**US-23**: Como visitante, quero visualizar o selo **"Compra Verificada"** em todas as avaliações válidas exibidas na comunidade. | **US-24**: Como visitante, quero consultar no Catálogo (`/comunidade/avaliacao-produto/pesquisa`) a média aritmética (ou `0.0`), a quantidade de avaliações válidas e a distribuição `5★–1★`.<br>**US-25**: Como sistema, quero invalidar automaticamente a avaliação e recalcular a média quando o único pedido válido for reembolsado (mantendo-a válida se houver outra compra elegível). |
+| **Catálogo de Cartas e Avaliações** | **US-20**: Como comprador elegível, quero acessar `/comunidade/avaliacoes` (ou entrar via `Minha Coleção` / detalhes da carta) e registrar avaliação com **nota inteira de 1 a 5** (`NotaAvaliacao`) e comentário opcional (`RN001`, `RN003`).<br>**US-21**: Como comprador que já avaliou a carta, quero abrir `Editar Minha Avaliação` e atualizar nota ou comentário de forma idempotente (sem duplicar minha contagem na média) ou clicar em `Cancelar` preservando integralmente a versão anterior (`RN002`, `RN003`). | **US-22**: Como sistema, quero interceptar inclusão e edição via **`AvaliacaoElegibilidadeProxy`** sobre a projeção local `CompraVerificada` (`CVE_COMPRA_VERIFICADA`), permitindo avaliar apenas quem possui ao menos um **pedido pago e não reembolsado** (`CVE_PAGA = true`, `CVE_REEMBOLSADA = false`) — rejeitando sem compra, pagamento pendente ou único pedido reembolsado (`RN001`).<br>**US-23**: Como visitante, quero visualizar o selo **`Compra Verificada`** (`AVA_COMPRA_VERIFICADA = true`) em todas as avaliações válidas exibidas na comunidade (`RN006`). | **US-24**: Como visitante ou usuário, quero consultar o resumo de avaliações de qualquer carta (`ResumoAvaliacoesProduto`), exibindo média aritmética com 1 casa decimal (ou `0.0` quando vazia), contagem de avaliações válidas e histograma de distribuição `5★–1★` (`RN004`).<br>**US-25**: Como sistema, quero que o reembolso do **único** pedido válido marque a avaliação como inválida (`AVA_VALIDA = false`) e recalcule a média/contagem (mantendo válida caso haja outra compra elegível), e quero bloquear qualquer edição de avaliação pertencente a outro usuário (`RN002`, `RN005`). |
+
+#### Rastreabilidade Completa da Etapa 3.4 ↔ Regras de Negócio ↔ Cenários BDD (16/16)
+
+| História | Regras (`comunidade/F003`) | Cenários de `avaliacao-de-cartas.feature` (16/16) | Protótipos / Telas |
+| :--- | :--- | :--- | :--- |
+| **US-20** | `RN001`, `RN003`, `RN006` | Registrar avaliação por comprador com pedido pago e não reembolsado; Registrar avaliação sem comentário opcional; Registrar avaliação com nota mínima válida 1; Rejeitar nota menor que 1; Rejeitar nota maior que 5 | `P10`, `P11`, `P13` (`/comunidade/avaliacoes`) |
+| **US-21** | `RN002`, `RN003` | Reavaliar uma carta atualiza a nota existente sem duplicar a contagem; Cancelar edição da avaliação preserva a nota e o comentário anteriores; Não é possível atualizar a avaliação de outro usuário | `P10`, `P14` (`/comunidade/avaliacoes`) |
+| **US-22**, **US-23** | `RN001`, `RN006` | Rejeitar avaliação sem compra; Rejeitar com pedido ainda não pago; Rejeitar quando o único pedido foi reembolsado; Permitir quando há um pedido reembolsado e outro pago não reembolsado | `P12`, `P13` (`/comunidade/avaliacoes`) |
+| **US-24** | `RN004`, `RN006` | Consultar média e contagem de avaliações da carta no catálogo (com selo compra verificada); Consultar resumo de uma carta ainda sem avaliações (`0.0` e `0`) | `P11`, `P12` (`/comunidade/avaliacoes`, `/comunidade/avaliacoes/:produtoId`) |
+| **US-25** | `RN005` | Reembolso do único pedido válido invalida a avaliação e recalcula a média; Reembolso de apenas um pedido mantém a avaliação válida se houver outra compra elegível | `P12`, `P14` (`/comunidade/avaliacoes`) |
 
 ### 3.4 `adm / F001` e `comunidade / F004` — Abertura Preferida do Anime One Piece (Detalhamento Etapa 3.3)
 
